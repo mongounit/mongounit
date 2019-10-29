@@ -1,0 +1,18 @@
+[
+  {
+    "collectionName": "myPersonCollection",
+    "documents": [
+      {
+        "flavors": [
+          "green",
+          "red"
+        ],
+        "address": {
+          "zipcode": 21299,
+          "street": "1234 Street name"
+        },
+        "name": "Yaakov-1"
+      }
+    ]
+  }
+]
