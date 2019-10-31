@@ -1824,6 +1824,8 @@ public class MongoUnitUtil {
   /**
    * @param location Path to the file.
    * @param locationType Type of location the provided 'location' is.
+   * @param classTestName Either the simple name of the test class or the 'name' specified in the
+   * {@link MongoUnitTest}.
    * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
    * whose package and class name (or name of {@link MongoUnitTest}) should be used for relativity
    * of the provided 'location' path. Otherwise, it's ignored and can be null.
@@ -1835,6 +1837,7 @@ public class MongoUnitUtil {
   public static String retrieveResourceFromFile(
       String location,
       LocationType locationType,
+      String classTestName,
       Class<?> relativePackageClass) throws MongoUnitException {
 
     String resourceContents = null;
@@ -1865,10 +1868,13 @@ public class MongoUnitUtil {
             throw new MongoUnitException(message);
           }
 
-          // Check if location starts with "/", if it does strip the slash
-          if (location.charAt(0) == '/') {
-            location = location.substring(1);
+          // Check if location starts with "/", if not add it
+          if (location.charAt(0) != '/') {
+            location = "/" + location;
           }
+
+          // Add class test name to the path
+          location = classTestName + location;
 
           path = Paths.get(relativePackageClass.getResource(location).toURI());
           resourceContents = Files.readString(path);
@@ -1884,11 +1890,15 @@ public class MongoUnitUtil {
       }
     } catch (Exception exception) {
 
+      String packagePlusTestClassNamePath =
+          getTestClassNamePath(classTestName, relativePackageClass);
+
       String packageRelativeClassName = relativePackageClass == null ?
           "null" :
           relativePackageClass.getName();
       String packageRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
-          " and relative to package of class '" + packageRelativeClassName + "'." :
+          " and relative to package and test class name of '" + packageRelativeClassName + "' in" +
+              "/" + classTestName + "'." :
           ".";
 
       String message = "Failed to load file resource at location '" + location + "', "
@@ -1897,6 +1907,18 @@ public class MongoUnitUtil {
     }
 
     return resourceContents;
+  }
+
+  /**
+   * @param classTestName Either the simple name of the test class or the 'name' specified in the
+   * {@link MongoUnitTest}.
+   * @param packagedClass Class based on whose package the returned path is constructed. Can be
+   * 'null'.
+   * @return 'null' if the provided 'relativePackageClass' is 'null', otherwise, a string that
+   * consists of the 'relativePackageClass' package name converted into a path combined with '/' and
+   * the provided 'classTestName'.
+   */
+  private static String getTestClassNamePath(String classTestName, Class<?> packagedClass) {
   }
 
   /**
