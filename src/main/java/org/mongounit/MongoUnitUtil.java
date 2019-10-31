@@ -1824,9 +1824,9 @@ public class MongoUnitUtil {
   /**
    * @param location Path to the file.
    * @param locationType Type of location the provided 'location' is.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
+   * whose package and class name (or name of {@link MongoUnitTest}) should be used for relativity
+   * of the provided 'location' path. Otherwise, it's ignored and can be null.
    * @return Contents of the file pointed to by the provided 'location', given the provided
    * 'locationType'.
    * @throws MongoUnitException If anything goes wrong loading the dataset from the provided
@@ -1855,19 +1855,19 @@ public class MongoUnitUtil {
 
           break;
 
-        case PACKAGE:
-
-          // Check if location starts with "/", if it does strip the slash
-          if (location.charAt(0) == '/') {
-            location = location.substring(1);
-          }
+        case PACKAGE_PLUS_CLASS:
 
           // If relativePackageClass is not present, throw exception
           if (relativePackageClass == null) {
             String message = "Specified location of '" + location + "' with location type of "
-                + "'PACKAGE' must also specify a non-null class to whose package this location is"
-                + " relative to.";
+                + "'PACKAGE_PLUS_CLASS' must also specify a non-null class to whose package and "
+                + "name (or name specified in @MongoUnitTest this location is relative to.";
             throw new MongoUnitException(message);
+          }
+
+          // Check if location starts with "/", if it does strip the slash
+          if (location.charAt(0) == '/') {
+            location = location.substring(1);
           }
 
           path = Paths.get(relativePackageClass.getResource(location).toURI());
@@ -1887,7 +1887,7 @@ public class MongoUnitUtil {
       String packageRelativeClassName = relativePackageClass == null ?
           "null" :
           relativePackageClass.getName();
-      String packageRelativeMessage = locationType == LocationType.PACKAGE ?
+      String packageRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
           " and relative to package of class '" + packageRelativeClassName + "'." :
           ".";
 
@@ -1954,7 +1954,13 @@ public class MongoUnitUtil {
           context.getRequiredTestMethod().getName() + "-seed.json";
 
       fileLocations = new String[1];
-      fileLocations[0] = retrieveResourcePathBasedOnStandardLocation("SeedWithDataset", fileName);
+//      fileLocations[0] = fileName; TODO: this is probably what we need
+
+      // TODO: probably don't need this at all. Just populate fileLocations with whatever the
+      //  standard path is and let it fail if it's not there from the
+      //  retrieveDatasetFromLocations method
+      fileLocations[0] = retrieveResourcePathBasedOnStandardLocation("SeedWithDataset",
+          locationType, fileName);
     }
 
     return retrieveDatasetFromLocations(fileLocations, locationType, relativePackageClass);
@@ -1968,9 +1974,9 @@ public class MongoUnitUtil {
    *
    * @param fileLocations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'fileLocations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
+   * whose package should be used for package relative 'location' path. Otherwise, it's ignored and
+   * can be null.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'fileLocations'.
    * @throws MongoUnitException If 'value' or 'locations' point to a file that does not exist or
@@ -2075,6 +2081,8 @@ public class MongoUnitUtil {
 
   /**
    * @param annotationName Name of the annotation for error reporting purposes.
+   * @param locationType Type of location to look for the provided 'fileName' in (i.e., relative to
+   * package & class name, classpath root, or absolute.
    * @param fileName File name to check for.
    * @return File path relative to the classpath root where the standard-named file with the dataset
    * is located. The method will check at the root of the classpath as well as in the '/mongounit'
@@ -2084,6 +2092,7 @@ public class MongoUnitUtil {
    */
   private static String retrieveResourcePathBasedOnStandardLocation(
       String annotationName,
+      LocationType locationType,
       String fileName) throws MongoUnitException {
 
     String filePath = "/" + fileName;
