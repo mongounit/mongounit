@@ -8,6 +8,12 @@
  */
 package org.mongounit;
 
+import static org.mongounit.MongoUnitUtil.combineDatasets;
+import static org.mongounit.MongoUnitUtil.extractMongoUnitDatasets;
+import static org.mongounit.MongoUnitUtil.extractTestClassName;
+import static org.mongounit.MongoUnitUtil.fromDatabase;
+import static org.mongounit.MongoUnitUtil.toDatabase;
+
 import com.mongodb.client.MongoDatabase;
 import java.util.List;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -68,12 +74,17 @@ public class MongoUnitExtension implements
   /**
    * Key with which to store class-level {@link MongoUnitDatasets}.
    */
-  private static final String CLASS_MONGO_UNIT_DATASETS = "classMongoUnitDatasets";
+  private static final String CLASS_MONGO_UNIT_DATASETS_KEY = "classMongoUnitDatasets";
 
   /**
    * Key with which to store method-level {@link MongoUnitDatasets}.
    */
-  private static final String METHOD_MONGO_UNIT_DATASETS = "methodMongoUnitDatasets";
+  private static final String METHOD_MONGO_UNIT_DATASETS_KEY = "methodMongoUnitDatasets";
+
+  /**
+   * Key with which to store test class name.
+   */
+  private static final String TEST_CLASS_NAME_KEY = "testClassName";
 
   @Override
   public void beforeAll(ExtensionContext context) {
@@ -94,14 +105,15 @@ public class MongoUnitExtension implements
     MongoUnitProperties mongoUnitProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
     extensionStore.put(MONGO_UNIT_PROPERTIES_KEY, mongoUnitProperties);
 
-    // TODO: need to figure out test class name here and place it in the store. That way it
-    //  will be accessed only once. Then, pass it to the other annotation processing.
+    // Extract test class name based on the class and its MongoUnitTest annotation
+    String testClassName = extractTestClassName(context);
+    extensionStore.put(TEST_CLASS_NAME_KEY, testClassName);
 
     // Extract class-level datasets based on MongoUnit annotations
-    MongoUnitDatasets mongoUnitDatasets = MongoUnitUtil.extractMongoUnitDatasets(context, true);
+    MongoUnitDatasets mongoUnitDatasets = extractMongoUnitDatasets(context, testClassName, true);
 
     // Save class level datasets in the store
-    extensionStore.put(CLASS_MONGO_UNIT_DATASETS, mongoUnitDatasets);
+    extensionStore.put(CLASS_MONGO_UNIT_DATASETS_KEY, mongoUnitDatasets);
   }
 
   @Override
@@ -118,26 +130,28 @@ public class MongoUnitExtension implements
 
     // Retrieve class-level datasets from store
     MongoUnitDatasets classLevelMongoUnitDatasets =
-        extensionStore.get(CLASS_MONGO_UNIT_DATASETS, MongoUnitDatasets.class);
+        extensionStore.get(CLASS_MONGO_UNIT_DATASETS_KEY, MongoUnitDatasets.class);
+
+    // Retrieve test class name (derived either from MongoUnitTest annotation or simple class name)
+    String testClassName = extensionStore.get(TEST_CLASS_NAME_KEY, String.class);
 
     // Extract method-level datasets based on MongoUnit annotations
-    MongoUnitDatasets methodLevelMongoUnitDatasets = MongoUnitUtil
-        .extractMongoUnitDatasets(context, false);
+    MongoUnitDatasets methodLevelMongoUnitDatasets =
+        extractMongoUnitDatasets(context, testClassName, false);
 
     // Get method-level store and save method level dataset
     Store methodStore = getMethodStore(context);
-    methodStore.put(METHOD_MONGO_UNIT_DATASETS, methodLevelMongoUnitDatasets);
+    methodStore.put(METHOD_MONGO_UNIT_DATASETS_KEY, methodLevelMongoUnitDatasets);
 
     // Combine class and method seed datasets
     List<MongoUnitCollection> combinedDataset =
-        MongoUnitUtil.combineDatasets(
+        combineDatasets(
             classLevelMongoUnitDatasets.getSeedWithDatasets(),
             methodLevelMongoUnitDatasets.getSeedWithDatasets());
 
-    // Seed database with this dataset
     try {
-
-      MongoUnitUtil.toDatabase(combinedDataset, mongoDatabase, mongoUnitProperties);
+      // Seed database with this dataset
+      toDatabase(combinedDataset, mongoDatabase, mongoUnitProperties);
 
     } catch (MongoUnitException mongoUnitException) {
 
@@ -158,12 +172,12 @@ public class MongoUnitExtension implements
 
     // Retrieve class-level datasets from store
     MongoUnitDatasets classLevelMongoUnitDatasets =
-        extensionStore.get(CLASS_MONGO_UNIT_DATASETS, MongoUnitDatasets.class);
+        extensionStore.get(CLASS_MONGO_UNIT_DATASETS_KEY, MongoUnitDatasets.class);
 
     // Get method-level store, retrieve method dataset; remove method-level dataset from store
     Store methodStore = getMethodStore(context);
     MongoUnitDatasets methodLevelMongoUnitDatasets =
-        methodStore.remove(METHOD_MONGO_UNIT_DATASETS, MongoUnitDatasets.class);
+        methodStore.remove(METHOD_MONGO_UNIT_DATASETS_KEY, MongoUnitDatasets.class);
 
     // If no AssertMatchesDataset annotation are placed on either class or method, no assertion
     if (!classLevelMongoUnitDatasets.isAssertAnnotationPresent()
@@ -175,12 +189,12 @@ public class MongoUnitExtension implements
 
     // Combine class and method seed datasets
     List<MongoUnitCollection> expectedDataset =
-        MongoUnitUtil.combineDatasets(
+        combineDatasets(
             classLevelMongoUnitDatasets.getAssertMatchesDatasets(),
             methodLevelMongoUnitDatasets.getAssertMatchesDatasets());
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = MongoUnitUtil.fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
 
     // Perform assertion
     AssertionResult assertionResult;
@@ -207,7 +221,8 @@ public class MongoUnitExtension implements
     Store extensionStore = getExtensionStore(context);
     extensionStore.remove(MONGODB_STORE_KEY);
     extensionStore.remove(MONGO_UNIT_PROPERTIES_KEY);
-    extensionStore.remove(CLASS_MONGO_UNIT_DATASETS);
+    extensionStore.remove(CLASS_MONGO_UNIT_DATASETS_KEY);
+    extensionStore.remove(TEST_CLASS_NAME_KEY);
 
     // Release reference to cached Mongo database
     CURRENT_MONGO_DATABASE = null;
