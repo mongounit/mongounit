@@ -24,6 +24,10 @@ import org.slf4j.LoggerFactory;
  * {@link MongoUnit} class contains utilities for manually seeding and performing assertion
  * matches.
  */
+// TODO: for manual calls, suggest using 'extends' because it will have @BeforeAll there that
+//  will extract class name ONCE instead of having to do it every time. Maybe have argument in
+//  these methods called "folderName" or something like that or "className" and in JavaDocs show
+//  that it's going to be a subfolder in the package structure.
 public class MongoUnit {
 
   /**

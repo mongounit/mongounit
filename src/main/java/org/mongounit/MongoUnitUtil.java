@@ -1868,7 +1868,7 @@ public class MongoUnitUtil {
             throw new MongoUnitException(message);
           }
 
-          // Check if location starts with "/", if not add it
+          // Make sure path always starts with "/" because it will be prepended with class name
           if (location.charAt(0) != '/') {
             location = "/" + location;
           }
@@ -1893,16 +1893,12 @@ public class MongoUnitUtil {
       String packagePlusTestClassNamePath =
           getTestClassNamePath(classTestName, relativePackageClass);
 
-      String packageRelativeClassName = relativePackageClass == null ?
-          "null" :
-          relativePackageClass.getName();
       String packageRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
-          " and relative to package and test class name of '" + packageRelativeClassName + "' in" +
-              "/" + classTestName + "'." :
-          ".";
+          " Attempted '" + packagePlusTestClassNamePath + "'." :
+          "";
 
       String message = "Failed to load file resource at location '" + location + "', "
-          + "with locationType of '" + locationType + "'" + packageRelativeMessage;
+          + "with locationType of '" + locationType + "'." + packageRelativeMessage;
       throw new MongoUnitException(message, exception);
     }
 
@@ -1910,15 +1906,23 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param classTestName Either the simple name of the test class or the 'name' specified in the
-   * {@link MongoUnitTest}.
+   * @param classTestName Name of the 'packagedClass' which may not necessary be its Java simple
+   * name.
    * @param packagedClass Class based on whose package the returned path is constructed. Can be
    * 'null'.
    * @return 'null' if the provided 'relativePackageClass' is 'null', otherwise, a string that
    * consists of the 'relativePackageClass' package name converted into a path combined with '/' and
    * the provided 'classTestName'.
    */
+  // TODO: write test for this
   private static String getTestClassNamePath(String classTestName, Class<?> packagedClass) {
+
+    // Return "null" if packagedClass is null
+    if (packagedClass == null) {
+      return "null";
+    }
+
+    return packagedClass.getPackageName().replace(".", "/") + "/" + classTestName;
   }
 
   /**
@@ -1926,9 +1930,10 @@ public class MongoUnitUtil {
    * @return Contents of the file pointed to by the provided 'location' relative to the root of the
    * classpath.
    */
-  public static String retrieveResourceFromFile(String location) throws MongoUnitException {
-    return retrieveResourceFromFile(location, LocationType.CLASSPATH_ROOT, null);
-  }
+  // TODO: this is not the default anymore
+//  public static String retrieveResourceFromFile(String location) throws MongoUnitException {
+//    return retrieveResourceFromFile(location, LocationType.CLASSPATH_ROOT, null);
+//  }
 
   /**
    * Returns List of {@link MongoUnitCollection}s based on the data pointed to by the 'value' or
@@ -1971,18 +1976,15 @@ public class MongoUnitUtil {
     } else {
 
       // Choose between a class and method based standard file name
+      // TODO: when it comes to className-seed.json, this method will probably need to take in
+      //  another argument to tell us what className is, i.e., either simple name or 'name' from
+      //  @MongoUnitTest, so this is not yet quite right
       String fileName = classLevel ?
           context.getRequiredTestClass().getSimpleName() + "-seed.json" :
           context.getRequiredTestMethod().getName() + "-seed.json";
 
       fileLocations = new String[1];
-//      fileLocations[0] = fileName; TODO: this is probably what we need
-
-      // TODO: probably don't need this at all. Just populate fileLocations with whatever the
-      //  standard path is and let it fail if it's not there from the
-      //  retrieveDatasetFromLocations method
-      fileLocations[0] = retrieveResourcePathBasedOnStandardLocation("SeedWithDataset",
-          locationType, fileName);
+      fileLocations[0] = fileName;
     }
 
     return retrieveDatasetFromLocations(fileLocations, locationType, relativePackageClass);

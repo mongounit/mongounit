@@ -94,6 +94,9 @@ public class MongoUnitExtension implements
     MongoUnitProperties mongoUnitProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
     extensionStore.put(MONGO_UNIT_PROPERTIES_KEY, mongoUnitProperties);
 
+    // TODO: need to figure out test class name here and place it in the store. That way it
+    //  will be accessed only once. Then, pass it to the other annotation processing.
+
     // Extract class-level datasets based on MongoUnit annotations
     MongoUnitDatasets mongoUnitDatasets = MongoUnitUtil.extractMongoUnitDatasets(context, true);
 
