@@ -28,10 +28,6 @@ import org.slf4j.LoggerFactory;
  * {@link MongoUnit} class contains utilities for manually seeding and performing assertion
  * matches.
  */
-// TODO: for manual calls, suggest using 'extends' because it will have @BeforeAll there that
-//  will extract class name ONCE instead of having to do it every time. Maybe have argument in
-//  these methods called "folderName" or something like that or "className" and in JavaDocs show
-//  that it's going to be a subfolder in the package structure.
 public class MongoUnit {
 
   /**
@@ -56,9 +52,9 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
-   * whose package should be used for package relative 'location' path. Otherwise, it's ignored and
-   * can be null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose packaged
+   * location should be used for relativity of the 'location' path. Otherwise, it's ignored and can
+   * be null.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'locations'.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
@@ -87,8 +83,8 @@ public class MongoUnit {
    * array. Returns a list of {@link MongoUnitCollection}s that can optionally be reused for
    * assertions in the 'assertMatches*' methods.
    *
-   * @param locations Array of paths to the files containing datasets. The locations are assumed to
-   * be relative to package of the provided 'testClass'.
+   * @param locations Array of paths to the files containing datasets. The locations type is
+   * 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'locations' and 'testClass'.
@@ -103,8 +99,8 @@ public class MongoUnit {
    * array. Returns a list of {@link MongoUnitCollection}s that can optionally be reused for
    * assertions in the 'assertMatches*' methods.
    *
-   * @param location Path to the file containing a dataset. The location is assumed to be relative
-   * to the package of the provided 'testClass'.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'location' and 'testClass'.
@@ -121,9 +117,8 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
-   * whose package should be used for package relative 'location' path. Otherwise, it's ignored and
-   * can be null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be null.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
    * locations.
    */
@@ -149,10 +144,11 @@ public class MongoUnit {
   /**
    * Asserts that whatever is currently in the database connected to by the MongoUnit framework
    * matches the JSON datasets contained in files pointed to by the provided 'locations' array of
-   * paths that are relative to the provided 'testClass'.
+   * paths. The locations type is 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more
+   * detail.
    *
-   * @param locations Array paths to the files containing datasets. The locations are assumed to be
-   * classpath root relative.
+   * @param locations Array paths to the files containing datasets. The locations type is 'CLASS' .
+   * See javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
    * locations.
@@ -165,11 +161,11 @@ public class MongoUnit {
 
   /**
    * Asserts that whatever is currently in the database connected to by the MongoUnit framework
-   * matches the JSON datasets contained in files pointed to by the provided 'location' path that is
-   * relative to the package of the provided 'testClass'.
+   * matches the JSON datasets contained in files pointed to by the provided 'location' path. The
+   * location type is 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more detail.
    *
-   * @param location Path to the file containing a dataset. The location is assumed to be relative
-   * to the package of the provided 'testClass'.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @throws MongoUnitException If something goes wrong with loading the dataset from the specified
    * location.
@@ -192,6 +188,7 @@ public class MongoUnit {
    * @throws MongoUnitException If something goes wrong interpreting the comparisons contained in
    * the provided 'datasets'.
    */
+  @SuppressWarnings("WeakerAccess")
   public static void assertMatchesDataset(List<MongoUnitCollection> expectedDatasets)
       throws MongoUnitException {
 
@@ -223,9 +220,9 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
-   * whose package should be used for package relative 'location' path. Otherwise, it's ignored and
-   * can be null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be
+   * 'null'.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'locations' array of paths.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
@@ -251,11 +248,11 @@ public class MongoUnit {
 
   /**
    * Returns a list of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
-   * the provided 'locations' array of paths. The 'locations' are assumed to be relative to the
-   * provided 'testClass' package.
+   * the provided 'locations' array of paths. The locations type is 'CLASS'. See javadoc org
+   * .mongounit.LocationType#CLASS for more detail.
    *
-   * @param locations Array paths to the files containing datasets. The 'locations' are assumed to
-   * be relative to the provided 'testClass' package.
+   * @param locations Array paths to the files containing datasets. The locations type is 'CLASS' .
+   * See javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'locations' array of paths.
@@ -271,11 +268,11 @@ public class MongoUnit {
 
   /**
    * Returns a list of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
-   * the provided 'locations' array of paths. The 'locations' are assumed to be relative to the
-   * package of the provided 'testClass'.
+   * the provided 'locations' array of paths. The location type is 'CLASS'. See javadoc
+   * org.mongounit.LocationType#CLASS for more detail.
    *
-   * @param location Path to the file containing a dataset. The 'location' are assumed to be be
-   * relative to the provided 'testClass' package.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
    * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'location' path.
