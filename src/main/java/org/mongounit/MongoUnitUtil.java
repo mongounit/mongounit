@@ -1925,15 +1925,14 @@ public class MongoUnitUtil {
       }
     } catch (Exception exception) {
 
-      String packagePlusTestClassNamePath =
-          getTestClassNamePath(testClassName, relativePackageClass);
+      String testClassNamePath = getTestClassNamePath(relativePackageClass);
 
-      String packageRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
-          " Attempted '" + packagePlusTestClassNamePath + "'." :
+      String testClassRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
+          " Attempted '" + testClassNamePath + "/" + location + "'." :
           "";
 
       String message = "Failed to load file resource at location '" + location + "', "
-          + "with locationType of '" + locationType + "'." + packageRelativeMessage;
+          + "with locationType of '" + locationType + "'." + testClassRelativeMessage;
       throw new MongoUnitException(message, exception);
     }
 
@@ -1941,23 +1940,20 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param classTestName Name of the 'packagedClass' which may not necessary be its Java simple
-   * name.
    * @param packagedClass Class based on whose package the returned path is constructed. Can be
    * 'null'.
    * @return 'null' if the provided 'relativePackageClass' is 'null', otherwise, a string that
-   * consists of the 'relativePackageClass' package name converted into a path combined with '/' and
-   * the provided 'classTestName'.
+   * consists of a leading '/' followed by 'relativePackageClass' package name converted into a path
+   * combined with trailing '/'.
    */
-  // TODO: write test for this
-  public static String getTestClassNamePath(String classTestName, Class<?> packagedClass) {
+  public static String getTestClassNamePath(Class<?> packagedClass) {
 
     // Return "null" if packagedClass is null
     if (packagedClass == null) {
       return "null";
     }
 
-    return packagedClass.getPackageName().replace(".", "/") + "/" + classTestName;
+    return "/" + packagedClass.getPackageName().replace(".", "/");
   }
 
   /**

@@ -45,7 +45,7 @@ import org.mongounit.model.MongoUnitCollection;
 import org.mongounit.model.MongoUnitDatasets;
 import org.mongounit.model.MongoUnitValue;
 import org.mongounit.test.AnnotatedTestClass;
-import org.mongounit.test.SampleClassIT;
+import org.mongounit.test.SampleITClass;
 
 /**
  * {@link MongoUnitUtilTest} is a test class for {@link MongoUnitUtil} class.
@@ -553,7 +553,7 @@ class MongoUnitUtilTest {
     assertNotNull(retrieveResourceFromFile(
         "test-resource.json",
         LocationType.PACKAGE_PLUS_CLASS,
-        SampleClassIT.class,
+        SampleITClass.class,
         "SampleClassIT"));
 
     assertThrows(
@@ -561,8 +561,8 @@ class MongoUnitUtilTest {
         () -> retrieveResourceFromFile(
             "does-not-exist-resource.json",
             LocationType.PACKAGE_PLUS_CLASS,
-            MongoUnitProperties.class,
-            null));
+            SampleITClass.class,
+            "SampleClassIT"));
 
     assertThrows(
         MongoUnitException.class,
@@ -810,8 +810,8 @@ class MongoUnitUtilTest {
   @DisplayName("getTestClassNamePath")
   void testGetTestClassNamePath() {
 
-    String testClassNamePath = getTestClassNamePath("myclass", AnnotatedTestClass.class);
-    assertEquals("org/mongounit/test/myclass", testClassNamePath);
+    String testClassNamePath = getTestClassNamePath(AnnotatedTestClass.class);
+    assertEquals("/org/mongounit/test", testClassNamePath);
   }
 }
 
