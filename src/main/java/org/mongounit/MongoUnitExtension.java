@@ -13,6 +13,7 @@ import static org.mongounit.MongoUnitUtil.extractMongoUnitDatasets;
 import static org.mongounit.MongoUnitUtil.extractTestClassName;
 import static org.mongounit.MongoUnitUtil.fromDatabase;
 import static org.mongounit.MongoUnitUtil.toDatabase;
+import static org.mongounit.config.MongoUnitConfigurationUtil.loadMongoUnitProperties;
 
 import com.mongodb.client.MongoDatabase;
 import java.util.List;
@@ -23,7 +24,6 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
-import org.mongounit.config.MongoUnitConfigurationUtil;
 import org.mongounit.config.MongoUnitProperties;
 import org.mongounit.model.AssertionResult;
 import org.mongounit.model.MongoUnitCollection;
@@ -102,11 +102,11 @@ public class MongoUnitExtension implements
     extensionStore.put(MONGODB_STORE_KEY, mongoDatabase);
 
     // Load MongoUnitProperties and save them in extension store
-    MongoUnitProperties mongoUnitProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
+    MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
     extensionStore.put(MONGO_UNIT_PROPERTIES_KEY, mongoUnitProperties);
 
     // Extract test class name based on the class and its MongoUnitTest annotation
-    String testClassName = extractTestClassName(context);
+    String testClassName = extractTestClassName(context.getRequiredTestClass());
     extensionStore.put(TEST_CLASS_NAME_KEY, testClassName);
 
     // Extract class-level datasets based on MongoUnit annotations

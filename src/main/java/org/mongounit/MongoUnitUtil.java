@@ -1689,14 +1689,21 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param context Extension context within which this test is being executed.
+   * @param testClass Class instance of the test class.
    * @return Name of the test class. If specified by the 'name' attribute of {@link MongoUnitTest}
    * annotation. If not specified, it defaults to the simple class name of the testing class.
+   * @throws MongoUnitException If the provided 'testClass' does not have {@link MongoUnitTest}
+   * annotation on it.
    */
-  // TODO: write test for this class
-  public static String extractTestClassName(ExtensionContext context) {
+  public static String extractTestClassName(Class<?> testClass) throws MongoUnitException {
 
-    Class<?> testClass = context.getRequiredTestClass();
+    // Throw exception if annotation is not present on test class
+    if (!testClass.isAnnotationPresent(MongoUnitTest.class)) {
+      String message = "@MongoUnitTest annotation was not found on '" + testClass.getName() + "'"
+          + " class.";
+      throw new MongoUnitException(message);
+    }
+
     MongoUnitTest mongoUnitTest = testClass.getAnnotation(MongoUnitTest.class);
 
     // If name is an empty string, use the simple class name
@@ -1852,11 +1859,11 @@ public class MongoUnitUtil {
   /**
    * @param location Path to the file.
    * @param locationType Type of location the provided 'location' is.
-   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
-   * name or, if not specified, the simple class name of the test class.
    * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
    * whose package and class name (or name of {@link MongoUnitTest}) should be used for relativity
    * of the provided 'location' path. Otherwise, it's ignored and can be null.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @return Contents of the file pointed to by the provided 'location', given the provided
    * 'locationType'.
    * @throws MongoUnitException If anything goes wrong loading the dataset from the provided
@@ -1943,7 +1950,7 @@ public class MongoUnitUtil {
    * the provided 'classTestName'.
    */
   // TODO: write test for this
-  private static String getTestClassNamePath(String classTestName, Class<?> packagedClass) {
+  public static String getTestClassNamePath(String classTestName, Class<?> packagedClass) {
 
     // Return "null" if packagedClass is null
     if (packagedClass == null) {
@@ -1952,16 +1959,6 @@ public class MongoUnitUtil {
 
     return packagedClass.getPackageName().replace(".", "/") + "/" + classTestName;
   }
-
-  /**
-   * @param location Path to the file.
-   * @return Contents of the file pointed to by the provided 'location' relative to the root of the
-   * classpath.
-   */
-  // TODO: this is not the default anymore; probably needs to be removed
-//  public static String retrieveResourceFromFile(String location) throws MongoUnitException {
-//    return retrieveResourceFromFile(location, LocationType.CLASSPATH_ROOT, null);
-//  }
 
   /**
    * Returns List of {@link MongoUnitCollection}s based on the data pointed to by the 'value' or
@@ -2017,7 +2014,6 @@ public class MongoUnitUtil {
    * based on whether or not this data was from a class level annotation or method level one (which
    * is determined by the provided 'classLevel').
    */
-  // TODO: write test for this
   public static String[] getFileLocations(
       ExtensionContext context,
       String[] value,
@@ -2152,43 +2148,6 @@ public class MongoUnitUtil {
 
     return finalMongoUnitCollectionDataset;
   }
-
-  /**
-   * @param annotationName Name of the annotation for error reporting purposes.
-   * @param locationType Type of location to look for the provided 'fileName' in (i.e., relative to
-   * package & class name, classpath root, or absolute.
-   * @param fileName File name to check for.
-   * @return File path relative to the classpath root where the standard-named file with the dataset
-   * is located. The method will check at the root of the classpath as well as in the '/mongounit'
-   * directory relative the classpath root.
-   * @throws MongoUnitException If the provided 'fileName' is not found at the classpath root nor in
-   * the '/mongounit' directory relative to the classpath root.
-   */
-  // TODO: not really needed anymore; remove!
-//  private static String retrieveResourcePathBasedOnStandardLocation(
-//      String annotationName,
-//      LocationType locationType,
-//      String fileName) throws MongoUnitException {
-//
-//    String filePath = "/" + fileName;
-//
-//    // Check if exists at the classpath root
-//    if (MongoUnitUtil.class.getResource(filePath) != null) {
-//      return filePath;
-//    }
-//
-//    // Check if exists at the classpath root /mongounit
-//    filePath = "/mongounit" + filePath;
-//    if (MongoUnitUtil.class.getResource(filePath) != null) {
-//      return filePath;
-//    }
-//
-//    // Neither location was successful, throw exception
-//    String message = annotationName + " did not contain a specific location. File at the standard "
-//        + "locations of 'classpath_root'/" + fileName + " or 'classpath_root/mongounit/"
-//        + fileName + " was not found.";
-//    throw new MongoUnitException(message);
-//  }
 }
 
 

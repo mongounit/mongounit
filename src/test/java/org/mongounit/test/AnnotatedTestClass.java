@@ -6,18 +6,23 @@
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See
  * the License for the specific language governing permissions and limitations under the License.
  */
-package org.mongounit;
+package org.mongounit.test;
+
+import org.mongounit.AssertMatchesDataset;
+import org.mongounit.MongoUnitTest;
+import org.mongounit.SeedWithDataset;
 
 /**
  * Class that's used to test annotation extraction.
  */
-@SeedWithDataset("mongounit/classSeed.json")
-@AssertMatchesDataset("mongounit/classAssert1.json")
-@AssertMatchesDataset("mongounit/classAssert2.json")
+@MongoUnitTest(name = "annotatedclass")
+@SeedWithDataset("classSeed.json")
+@AssertMatchesDataset("classAssert1.json")
+@AssertMatchesDataset("classAssert2.json")
 public class AnnotatedTestClass {
 
-  @SeedWithDataset("mongounit/methodSeed1.json")
-  @SeedWithDataset("mongounit/methodSeed2.json")
+  @SeedWithDataset("methodSeed1.json")
+  @SeedWithDataset("methodSeed2.json")
   @AssertMatchesDataset(additionalDataset = false)
   public void someTestMethod() {
     // do nothing, it's just for annotations

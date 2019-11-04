@@ -23,7 +23,9 @@ public enum LocationType {
    * Location should be interpreted relative to the classpath root plus the package structure along
    * with class name (or 'name' specified by {@link MongoUnitTest}), i.e., if the fully qualified
    * name of the test class is 'com.mytest.MyIT' and this value is selected, the file will be
-   * searched for in the '/com/mytest/MyIT' folder relative to the root of the classpath.
+   * searched for in the '/com/mytest/MyIT' folder relative to the root of the classpath. If
+   * 'com.mytest.MyIT' class' {@link MongoUnitTest} annotation specifies 'name' of 'test1', the file
+   * will be searched for in the '/com/mytest/test1' folder relative to the root of the classpath.
    */
   PACKAGE_PLUS_CLASS,
 

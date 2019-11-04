@@ -92,7 +92,7 @@ public @interface AssertMatchesDataset {
   /**
    * @return Dictates how to treat paths specified in 'locations' or its alias 'value'.
    */
-  LocationType locationType() default LocationType.CLASSPATH_ROOT;
+  LocationType locationType() default LocationType.PACKAGE_PLUS_CLASS;
 
   /**
    * Returns true to indicate additional assertion dataset should be used for this assertion based

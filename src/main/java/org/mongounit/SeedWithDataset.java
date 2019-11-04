@@ -80,7 +80,7 @@ public @interface SeedWithDataset {
   /**
    * @return Dictates how to treat paths specified in 'locations' or its alias 'value'.
    */
-  LocationType locationType() default LocationType.CLASSPATH_ROOT;
+  LocationType locationType() default LocationType.PACKAGE_PLUS_CLASS;
 
   /**
    * Returns whether or not the dataset(s) of this annotation should also be used when building up
