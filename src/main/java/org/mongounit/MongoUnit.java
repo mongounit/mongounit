@@ -95,7 +95,7 @@ public class MongoUnit {
    */
   @SuppressWarnings("UnusedReturnValue")
   public static List<MongoUnitCollection> seedWithDataset(String[] locations, Class<?> testClass) {
-    return seedWithDataset(locations, LocationType.PACKAGE_PLUS_CLASS, testClass);
+    return seedWithDataset(locations, LocationType.CLASS, testClass);
   }
 
   /**
@@ -111,7 +111,7 @@ public class MongoUnit {
    */
   @SuppressWarnings("UnusedReturnValue")
   public static List<MongoUnitCollection> seedWithDataset(String location, Class<?> testClass) {
-    return seedWithDataset(new String[]{location}, LocationType.PACKAGE_PLUS_CLASS, testClass);
+    return seedWithDataset(new String[]{location}, LocationType.CLASS, testClass);
   }
 
   /**
@@ -160,7 +160,7 @@ public class MongoUnit {
   public static void assertMatchesDataset(
       String[] locations,
       Class<?> testClass) throws MongoUnitException {
-    assertMatchesDataset(locations, LocationType.PACKAGE_PLUS_CLASS, testClass);
+    assertMatchesDataset(locations, LocationType.CLASS, testClass);
   }
 
   /**
@@ -177,7 +177,7 @@ public class MongoUnit {
   public static void assertMatchesDataset(
       String location,
       Class<?> testClass) throws MongoUnitException {
-    assertMatchesDataset(new String[]{location}, LocationType.PACKAGE_PLUS_CLASS, testClass);
+    assertMatchesDataset(new String[]{location}, LocationType.CLASS, testClass);
   }
 
   /**
@@ -266,7 +266,7 @@ public class MongoUnit {
       String[] locations,
       Class<?> testClass)
       throws MongoUnitException {
-    return loadDatasetFromLocations(locations, LocationType.PACKAGE_PLUS_CLASS, testClass);
+    return loadDatasetFromLocations(locations, LocationType.CLASS, testClass);
   }
 
   /**
@@ -289,7 +289,7 @@ public class MongoUnit {
 
     return loadDatasetFromLocations(
         new String[]{location},
-        LocationType.PACKAGE_PLUS_CLASS,
+        LocationType.CLASS,
         testClass);
   }
 

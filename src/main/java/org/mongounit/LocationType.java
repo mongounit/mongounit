@@ -27,7 +27,7 @@ public enum LocationType {
    * 'com.mytest.MyIT' class' {@link MongoUnitTest} annotation specifies 'name' of 'test1', the file
    * will be searched for in the '/com/mytest/test1' folder relative to the root of the classpath.
    */
-  PACKAGE_PLUS_CLASS,
+  CLASS,
 
   /**
    * Location value should be treated as an absolute file path.

@@ -29,13 +29,23 @@ public @interface SeedWithDataset {
   /**
    * List of locations of JSON files that contain the dataset to seed the database with.
    *
-   * If the 'locationType' is 'CLASSPATH_ROOT', the paths are assumed to be relative to the root of
-   * the classpath or in the directory 'mongounit' located at the root of the classpath.
-   *
    * Specifying this annotation on a class or a method without providing at least a single location
    * should cause the MongoUnit framework to look for a default file named 'ClassName-seed.json' or
-   * 'methodName-seed.json' (depending on the location of the annotation) at the root of the
-   * classpath or in the directory 'mongounit' located at the root of the classpath.
+   * 'methodName-seed.json' (depending on the location of the annotation). The directory in which
+   * this file will be looked for depends on the provided 'locationType'.
+   *
+   * If 'locationType' is 'CLASSPATH_ROOT', the file will be looked for at the classpath root.
+   *
+   * If the 'locationType' is 'CLASS', the file will be looked for at theclasspath root plus the
+   * package structure along with class name (or 'name' specified by {@link MongoUnitTest}), i.e.,
+   * if the fully qualified name of the test class is 'com.mytest.MyIT' and this value is selected,
+   * the file will be searched for in the '/com/mytest/MyIT' folder relative to the root of the
+   * classpath. If 'com.mytest.MyIT' class' {@link MongoUnitTest} annotation specifies 'name' of
+   * 'test1', the file will be searched for in the '/com/mytest/test1' folder relative to the root
+   * of the classpath.
+   *
+   * If the 'locationType' is 'ABSOLUTE', the file will be looked for in the root directory, i.e .,
+   * '/'.
    *
    * If the MongoUnit framework fails to find any of the the seed data file(s), an exception will be
    * thrown.
@@ -54,13 +64,23 @@ public @interface SeedWithDataset {
   /**
    * List of locations of JSON files that contain the dataset to seed the database with.
    *
-   * If the 'locationType' is 'CLASSPATH_ROOT', the paths are assumed to be relative to the root of
-   * the classpath or in the directory 'mongounit' located at the root of the classpath.
-   *
    * Specifying this annotation on a class or a method without providing at least a single location
    * should cause the MongoUnit framework to look for a default file named 'ClassName-seed.json' or
-   * 'methodName-seed.json' (depending on the location of the annotation) at the root of the
-   * classpath or in the directory 'mongounit' located at the root of the classpath.
+   * 'methodName-seed.json' (depending on the location of the annotation). The directory in which
+   * this file will be looked for depends on the provided 'locationType'.
+   *
+   * If 'locationType' is 'CLASSPATH_ROOT', the file will be looked for at the classpath root.
+   *
+   * If the 'locationType' is 'CLASS', the file will be looked for at theclasspath root plus the
+   * package structure along with class name (or 'name' specified by {@link MongoUnitTest}), i.e.,
+   * if the fully qualified name of the test class is 'com.mytest.MyIT' and this value is selected,
+   * the file will be searched for in the '/com/mytest/MyIT' folder relative to the root of the
+   * classpath. If 'com.mytest.MyIT' class' {@link MongoUnitTest} annotation specifies 'name' of
+   * 'test1', the file will be searched for in the '/com/mytest/test1' folder relative to the root
+   * of the classpath.
+   *
+   * If the 'locationType' is 'ABSOLUTE', the file will be looked for in the root directory, i.e .,
+   * '/'.
    *
    * If the MongoUnit framework fails to find any of the the seed data file(s), an exception will be
    * thrown.
@@ -80,7 +100,7 @@ public @interface SeedWithDataset {
   /**
    * @return Dictates how to treat paths specified in 'locations' or its alias 'value'.
    */
-  LocationType locationType() default LocationType.PACKAGE_PLUS_CLASS;
+  LocationType locationType() default LocationType.CLASS;
 
   /**
    * Returns whether or not the dataset(s) of this annotation should also be used when building up

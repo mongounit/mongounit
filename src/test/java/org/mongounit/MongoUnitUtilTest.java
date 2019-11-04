@@ -552,7 +552,7 @@ class MongoUnitUtilTest {
 
     assertNotNull(retrieveResourceFromFile(
         "test-resource.json",
-        LocationType.PACKAGE_PLUS_CLASS,
+        LocationType.CLASS,
         SampleITClass.class,
         "SampleClassIT"));
 
@@ -560,7 +560,7 @@ class MongoUnitUtilTest {
         MongoUnitException.class,
         () -> retrieveResourceFromFile(
             "does-not-exist-resource.json",
-            LocationType.PACKAGE_PLUS_CLASS,
+            LocationType.CLASS,
             SampleITClass.class,
             "SampleClassIT"));
 
@@ -568,7 +568,7 @@ class MongoUnitUtilTest {
         MongoUnitException.class,
         () -> retrieveResourceFromFile(
             "does-not-exist-resource.json",
-            LocationType.PACKAGE_PLUS_CLASS,
+            LocationType.CLASS,
             null,
             null));
   }

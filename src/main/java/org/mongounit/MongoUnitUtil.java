@@ -979,10 +979,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", ">", or "<". The "=" is how every field value compared by default if
-   * the special document containing "comparator" is not present. "<" and ">" compare values to
-   * ensure one is less than or greater than the other. These comparisons will work for Strings,
-   * dates, date/time stamps, numbers (or any type that implements {@link Comparable} interface).
+   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
+   * by default if the special document containing "comparator" is not present. "<" and ">" compare
+   * values to ensure one is less than or greater than the other. These comparisons will work for
+   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
+   * interface).
    *
    * @param expected List of {@link MongoUnitCollection}s that the provided 'actual' dataset is to
    * be compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1063,10 +1064,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", ">", or "<". The "=" is how every field value compared by default if
-   * the special document containing "comparator" is not present. "<" and ">" compare values to
-   * ensure one is less than or greater than the other. These comparisons will work for Strings,
-   * dates, date/time stamps, numbers (or any type that implements {@link Comparable} interface).
+   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
+   * by default if the special document containing "comparator" is not present. "<" and ">" compare
+   * values to ensure one is less than or greater than the other. These comparisons will work for
+   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
+   * interface).
    *
    * @param expected {@link MongoUnitCollection}s that the provided 'actual' dataset is to be
    * compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1325,10 +1327,10 @@ public class MongoUnitUtil {
    * Returns {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue' and
    * 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
    *
-   * The value of "comparator" can be either "=", ">", "<", ">=", "<=". The "=" is how every field
-   * value compared by default if the special document containing "comparator" is not present. "<"
-   * and ">" compare values to ensure one is less than or greater than the other. The ">=" and "<="
-   * compare values to ensure one is less than or greater than or equal to the other.
+   * The value of "comparator" can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every
+   * field value compared by default if the special document containing "comparator" is not present.
+   * "<" and ">" compare values to ensure one is less than or greater than the other. The ">=" and
+   * "<=" compare values to ensure one is less than or greater than or equal to the other.
    *
    * If the "comparator" field is not specified, it's assumed to be "=".
    *
@@ -1859,9 +1861,9 @@ public class MongoUnitUtil {
   /**
    * @param location Path to the file.
    * @param locationType Type of location the provided 'location' is.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
-   * whose package and class name (or name of {@link MongoUnitTest}) should be used for relativity
-   * of the provided 'location' path. Otherwise, it's ignored and can be null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * and class name (or name of {@link MongoUnitTest}) should be used for relativity of the provided
+   * 'location' path. Otherwise, it's ignored and can be null.
    * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
    * name or, if not specified, the simple class name of the test class.
    * @return Contents of the file pointed to by the provided 'location', given the provided
@@ -1877,35 +1879,30 @@ public class MongoUnitUtil {
 
     String resourceContents = null;
 
+    // Check if location starts with "/" and, if not, add it
+    if (location.charAt(0) != '/') {
+      location = "/" + location;
+    }
+
     try {
 
       switch (locationType) {
 
         case CLASSPATH_ROOT:
 
-          // Check if location starts with "/" and, if not, add it
-          if (location.charAt(0) != '/') {
-            location = "/" + location;
-          }
-
           Path path = Paths.get(MongoUnitUtil.class.getResource(location).toURI());
           resourceContents = Files.readString(path);
 
           break;
 
-        case PACKAGE_PLUS_CLASS:
+        case CLASS:
 
           // If relativePackageClass is not present, throw exception
           if (relativePackageClass == null) {
             String message = "Specified location of '" + location + "' with location type of "
-                + "'PACKAGE_PLUS_CLASS' must also specify a non-null class to whose package and "
+                + "'CLASS' must also specify a non-null class to whose package and "
                 + "name (or name specified in @MongoUnitTest this location is relative to.";
             throw new MongoUnitException(message);
-          }
-
-          // Make sure path always starts with "/" because it will be prepended with test class name
-          if (location.charAt(0) != '/') {
-            location = "/" + location;
           }
 
           // Add test class name to the location
@@ -1927,7 +1924,7 @@ public class MongoUnitUtil {
 
       String testClassNamePath = getTestClassNamePath(relativePackageClass);
 
-      String testClassRelativeMessage = locationType == LocationType.PACKAGE_PLUS_CLASS ?
+      String testClassRelativeMessage = locationType == LocationType.CLASS ?
           " Attempted '" + testClassNamePath + "/" + location + "'." :
           "";
 
@@ -2051,9 +2048,8 @@ public class MongoUnitUtil {
    *
    * @param fileLocations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'fileLocations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE_PLUS_CLASS', this is the class type
-   * whose package should be used for package relative 'location' path. Otherwise, it's ignored and
-   * can be null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be null.
    * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
    * name or, if not specified, the simple class name of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
