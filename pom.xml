@@ -19,6 +19,27 @@
     layer backed by a MongoDB database.
   </description>
 
+  <url>https://github.com/mongounit/mongounit</url>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Yaakov Chaikin</name>
+      <email>yaakov@ClearlyDecoded.com</email>
+      <organization>ClearlyDecoded.com</organization>
+      <organizationUrl>https://ClearlyDecoded.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/mongounit/mongounit.git</connection>
+    <developerConnection>scm:git:ssh://github.com/mongounit/mongounit.git</developerConnection>
+    <url>https://github.com/mongounit/mongounit/tree/master</url>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>11</java.version>
