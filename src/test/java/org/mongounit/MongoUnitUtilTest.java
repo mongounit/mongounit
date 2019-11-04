@@ -22,10 +22,14 @@ import static org.mongounit.MongoUnitUtil.combineDatasets;
 import static org.mongounit.MongoUnitUtil.compare;
 import static org.mongounit.MongoUnitUtil.extractMongoUnitDatasets;
 import static org.mongounit.MongoUnitUtil.extractMongoUnitValue;
+import static org.mongounit.MongoUnitUtil.extractTestClassName;
 import static org.mongounit.MongoUnitUtil.generateMongoUnitValueDocument;
+import static org.mongounit.MongoUnitUtil.getFileLocations;
+import static org.mongounit.MongoUnitUtil.getTestClassNamePath;
 import static org.mongounit.MongoUnitUtil.retrieveDatasetFromLocations;
 import static org.mongounit.MongoUnitUtil.retrieveResourceFromFile;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,6 +44,8 @@ import org.mongounit.config.MongoUnitProperties;
 import org.mongounit.model.MongoUnitCollection;
 import org.mongounit.model.MongoUnitDatasets;
 import org.mongounit.model.MongoUnitValue;
+import org.mongounit.test.AnnotatedTestClass;
+import org.mongounit.test.SampleITClass;
 
 /**
  * {@link MongoUnitUtilTest} is a test class for {@link MongoUnitUtil} class.
@@ -535,35 +541,35 @@ class MongoUnitUtilTest {
     assertNotNull(retrieveResourceFromFile(
         "org/mongounit/config/test-resource.json",
         LocationType.CLASSPATH_ROOT,
+        null,
         null));
 
     assertNotNull(retrieveResourceFromFile(
         "/org/mongounit/config/test-resource.json",
         LocationType.CLASSPATH_ROOT,
+        null,
         null));
 
     assertNotNull(retrieveResourceFromFile(
         "test-resource.json",
-        LocationType.PACKAGE,
-        MongoUnitProperties.class));
-
-    assertNotNull(retrieveResourceFromFile(
-        "/test-resource.json",
-        LocationType.PACKAGE,
-        MongoUnitProperties.class));
+        LocationType.CLASS,
+        SampleITClass.class,
+        "SampleClassIT"));
 
     assertThrows(
         MongoUnitException.class,
         () -> retrieveResourceFromFile(
             "does-not-exist-resource.json",
-            LocationType.PACKAGE,
-            MongoUnitProperties.class));
+            LocationType.CLASS,
+            SampleITClass.class,
+            "SampleClassIT"));
 
     assertThrows(
         MongoUnitException.class,
         () -> retrieveResourceFromFile(
             "does-not-exist-resource.json",
-            LocationType.PACKAGE,
+            LocationType.CLASS,
+            null,
             null));
   }
 
@@ -572,14 +578,23 @@ class MongoUnitUtilTest {
   void testRetrieveResourceFromFileClassPathRoot() {
 
     assertNotNull(
-        retrieveResourceFromFile("org/mongounit/config/test-resource.json"));
+        retrieveResourceFromFile(
+            "org/mongounit/config/test-resource.json",
+            LocationType.CLASSPATH_ROOT,
+            null,
+            null));
 
     assertThrows(
-        MongoUnitException.class, () -> retrieveResourceFromFile("does-not-exist-resource.json"));
+        MongoUnitException.class, () ->
+            retrieveResourceFromFile(
+                "does-not-exist-resource.json",
+                LocationType.CLASSPATH_ROOT,
+                null,
+                null));
   }
 
   @Test
-  @DisplayName("extractMongoUnitDatasets and combineNoRepeatingCollections")
+  @DisplayName("extractMongoUnitDatasets, combineNoRepeatingCollections, extractTestClassName")
   void testExtractMongoUnitDatasets() throws Exception {
 
     ExtensionContext extensionContext = Mockito.mock(ExtensionContext.class);
@@ -591,7 +606,9 @@ class MongoUnitUtilTest {
         .when(extensionContext.getRequiredTestMethod())
         .thenReturn(AnnotatedTestClass.class.getMethod("someTestMethod"));
 
-    MongoUnitDatasets mongoUnitDatasets = extractMongoUnitDatasets(extensionContext, true);
+    String testClassName = extractTestClassName(AnnotatedTestClass.class);
+    MongoUnitDatasets mongoUnitDatasets =
+        extractMongoUnitDatasets(extensionContext, testClassName, true);
 
     assertTrue(mongoUnitDatasets.isAssertAnnotationPresent(), "Assertion datasets present");
     assertEquals(1, mongoUnitDatasets.getSeedWithDatasets().size(), "1 seed collection.");
@@ -606,7 +623,7 @@ class MongoUnitUtilTest {
         mongoUnitDatasets.getAssertMatchesDatasets().get(0).getDocuments().size(),
         "2 assert documents.");
 
-    mongoUnitDatasets = extractMongoUnitDatasets(extensionContext, false);
+    mongoUnitDatasets = extractMongoUnitDatasets(extensionContext, testClassName, false);
 
     assertTrue(mongoUnitDatasets.isAssertAnnotationPresent(), "Assertion datasets present");
     assertEquals(1, mongoUnitDatasets.getSeedWithDatasets().size(), "1 seed collection.");
@@ -675,8 +692,9 @@ class MongoUnitUtilTest {
 
     List<MongoUnitCollection> mongoUnitCollections =
         retrieveDatasetFromLocations(
-            new String[]{"mongounit/classSeed.json"},
+            new String[]{"org/mongounit/test/annotatedclass/classSeed.json"},
             LocationType.CLASSPATH_ROOT,
+            null,
             null);
 
     assertEquals(
@@ -690,6 +708,7 @@ class MongoUnitUtilTest {
         () -> retrieveDatasetFromLocations(
             new String[]{"classSeed.json"},
             LocationType.CLASSPATH_ROOT,
+            null,
             null), "Exception should be thrown (wrong file location)");
   }
 
@@ -744,6 +763,55 @@ class MongoUnitUtilTest {
         value.get("$$OBJECT_ID"),
         "Map should have Object ID value under correct key.");
 
+  }
+
+  @Test
+  @DisplayName("getFileLocations")
+  void testGetFileLocations() throws NoSuchMethodException {
+
+    ExtensionContext extensionContext = Mockito.mock(ExtensionContext.class);
+    String[] values = {};
+
+    String[] fileLocations =
+        getFileLocations(extensionContext, values, values, true, "testclass", "-seed.json");
+
+    String[] expected = {"testclass-seed.json"};
+    assertEquals(
+        expected[0],
+        fileLocations[0],
+        "Should default to single class name based location.");
+    assertEquals(1, fileLocations.length, "File locations should only have 1 value.");
+
+    Method method = AnnotatedTestClass.class.getMethod("someTestMethod");
+    Mockito.when(extensionContext.getRequiredTestMethod()).thenReturn(method);
+
+    fileLocations =
+        getFileLocations(extensionContext, values, values, false, "testclass", "-seed.json");
+    expected[0] = "someTestMethod-seed.json";
+    assertEquals(
+        expected[0],
+        fileLocations[0],
+        "Should default to single class name based location.");
+    assertEquals(1, fileLocations.length, "File locations should only have 1 value.");
+
+    values = new String[1];
+    values[0] = "testFile.json";
+    fileLocations =
+        getFileLocations(extensionContext, values, values, false, "testclass", "-seed.json");
+    expected[0] = "testFile.json";
+    assertEquals(
+        expected[0],
+        fileLocations[0],
+        "Should default to single class name based location.");
+    assertEquals(1, fileLocations.length, "File locations should only have 1 value.");
+  }
+
+  @Test
+  @DisplayName("getTestClassNamePath")
+  void testGetTestClassNamePath() {
+
+    String testClassNamePath = getTestClassNamePath(AnnotatedTestClass.class);
+    assertEquals("/org/mongounit/test", testClassNamePath);
   }
 }
 

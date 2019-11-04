@@ -979,10 +979,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", ">", or "<". The "=" is how every field value compared by default if
-   * the special document containing "comparator" is not present. "<" and ">" compare values to
-   * ensure one is less than or greater than the other. These comparisons will work for Strings,
-   * dates, date/time stamps, numbers (or any type that implements {@link Comparable} interface).
+   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
+   * by default if the special document containing "comparator" is not present. "<" and ">" compare
+   * values to ensure one is less than or greater than the other. These comparisons will work for
+   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
+   * interface).
    *
    * @param expected List of {@link MongoUnitCollection}s that the provided 'actual' dataset is to
    * be compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1063,10 +1064,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", ">", or "<". The "=" is how every field value compared by default if
-   * the special document containing "comparator" is not present. "<" and ">" compare values to
-   * ensure one is less than or greater than the other. These comparisons will work for Strings,
-   * dates, date/time stamps, numbers (or any type that implements {@link Comparable} interface).
+   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
+   * by default if the special document containing "comparator" is not present. "<" and ">" compare
+   * values to ensure one is less than or greater than the other. These comparisons will work for
+   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
+   * interface).
    *
    * @param expected {@link MongoUnitCollection}s that the provided 'actual' dataset is to be
    * compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1325,10 +1327,10 @@ public class MongoUnitUtil {
    * Returns {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue' and
    * 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
    *
-   * The value of "comparator" can be either "=", ">", "<", ">=", "<=". The "=" is how every field
-   * value compared by default if the special document containing "comparator" is not present. "<"
-   * and ">" compare values to ensure one is less than or greater than the other. The ">=" and "<="
-   * compare values to ensure one is less than or greater than or equal to the other.
+   * The value of "comparator" can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every
+   * field value compared by default if the special document containing "comparator" is not present.
+   * "<" and ">" compare values to ensure one is less than or greater than the other. The ">=" and
+   * "<=" compare values to ensure one is less than or greater than or equal to the other.
    *
    * If the "comparator" field is not specified, it's assumed to be "=".
    *
@@ -1689,11 +1691,40 @@ public class MongoUnitUtil {
   }
 
   /**
+   * @param testClass Class instance of the test class.
+   * @return Name of the test class. If specified by the 'name' attribute of {@link MongoUnitTest}
+   * annotation. If not specified, it defaults to the simple class name of the testing class.
+   * @throws MongoUnitException If the provided 'testClass' does not have {@link MongoUnitTest}
+   * annotation on it.
+   */
+  public static String extractTestClassName(Class<?> testClass) throws MongoUnitException {
+
+    // Throw exception if annotation is not present on test class
+    if (!testClass.isAnnotationPresent(MongoUnitTest.class)) {
+      String message = "@MongoUnitTest annotation was not found on '" + testClass.getName() + "'"
+          + " class.";
+      throw new MongoUnitException(message);
+    }
+
+    MongoUnitTest mongoUnitTest = testClass.getAnnotation(MongoUnitTest.class);
+
+    // If name is an empty string, use the simple class name
+    String mongoUnitTestAnnotationName = mongoUnitTest.name();
+    if ("".equals(mongoUnitTestAnnotationName)) {
+      return testClass.getSimpleName();
+    }
+
+    return mongoUnitTestAnnotationName;
+  }
+
+  /**
    * Extracts MongoUnit datasets based on the potential class or method level MongoUnit annotations.
    * The seed and assert datasets returned do not have same-named collections in the list of
    * collections.
    *
    * @param context Extension context within which this method is being executed.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @param classLevel If 'true', this method will treat this extraction on a class level, if
    * 'false', on a method level.
    * @return Instance of {@link MongoUnitDatasets} which potentially contains datasets to use for
@@ -1705,6 +1736,7 @@ public class MongoUnitUtil {
    */
   public static MongoUnitDatasets extractMongoUnitDatasets(
       ExtensionContext context,
+      String testClassName,
       boolean classLevel) throws MongoUnitException {
 
     // Extract ordered class annotations
@@ -1724,7 +1756,11 @@ public class MongoUnitUtil {
     for (SeedWithDataset seedWithDatasetAnnotation : annotations.getSeedWithDatasetAnnotations()) {
 
       List<MongoUnitCollection> seedWithDataset =
-          processSeedWithDatasetAnnotation(seedWithDatasetAnnotation, context, classLevel);
+          processSeedWithDatasetAnnotation(
+              seedWithDatasetAnnotation,
+              context,
+              testClassName,
+              classLevel);
       totalUncombinedSeedDataset.addAll(seedWithDataset);
 
       // If this is to be reused as assertion dataset, add to assertion list
@@ -1741,6 +1777,7 @@ public class MongoUnitUtil {
           processAssertMatchesDatasetAnnotation(
               assertMatchesDatasetAnnotation,
               context,
+              testClassName,
               classLevel);
       totalUncombinedAssertDataset.addAll(assertMatchesDataset);
     }
@@ -1824,9 +1861,11 @@ public class MongoUnitUtil {
   /**
    * @param location Path to the file.
    * @param locationType Type of location the provided 'location' is.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * and class name (or name of {@link MongoUnitTest}) should be used for relativity of the provided
+   * 'location' path. Otherwise, it's ignored and can be null.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @return Contents of the file pointed to by the provided 'location', given the provided
    * 'locationType'.
    * @throws MongoUnitException If anything goes wrong loading the dataset from the provided
@@ -1835,9 +1874,15 @@ public class MongoUnitUtil {
   public static String retrieveResourceFromFile(
       String location,
       LocationType locationType,
-      Class<?> relativePackageClass) throws MongoUnitException {
+      Class<?> relativePackageClass,
+      String testClassName) throws MongoUnitException {
 
     String resourceContents = null;
+
+    // Check if location starts with "/" and, if not, add it
+    if (location.charAt(0) != '/') {
+      location = "/" + location;
+    }
 
     try {
 
@@ -1845,30 +1890,23 @@ public class MongoUnitUtil {
 
         case CLASSPATH_ROOT:
 
-          // Check if location starts with "/", if not add it
-          if (location.charAt(0) != '/') {
-            location = "/" + location;
-          }
-
           Path path = Paths.get(MongoUnitUtil.class.getResource(location).toURI());
           resourceContents = Files.readString(path);
 
           break;
 
-        case PACKAGE:
-
-          // Check if location starts with "/", if it does strip the slash
-          if (location.charAt(0) == '/') {
-            location = location.substring(1);
-          }
+        case CLASS:
 
           // If relativePackageClass is not present, throw exception
           if (relativePackageClass == null) {
             String message = "Specified location of '" + location + "' with location type of "
-                + "'PACKAGE' must also specify a non-null class to whose package this location is"
-                + " relative to.";
+                + "'CLASS' must also specify a non-null class to whose package and "
+                + "name (or name specified in @MongoUnitTest this location is relative to.";
             throw new MongoUnitException(message);
           }
+
+          // Add test class name to the location
+          location = testClassName + location;
 
           path = Paths.get(relativePackageClass.getResource(location).toURI());
           resourceContents = Files.readString(path);
@@ -1884,15 +1922,14 @@ public class MongoUnitUtil {
       }
     } catch (Exception exception) {
 
-      String packageRelativeClassName = relativePackageClass == null ?
-          "null" :
-          relativePackageClass.getName();
-      String packageRelativeMessage = locationType == LocationType.PACKAGE ?
-          " and relative to package of class '" + packageRelativeClassName + "'." :
-          ".";
+      String testClassNamePath = getTestClassNamePath(relativePackageClass);
+
+      String testClassRelativeMessage = locationType == LocationType.CLASS ?
+          " Attempted '" + testClassNamePath + "/" + location + "'." :
+          "";
 
       String message = "Failed to load file resource at location '" + location + "', "
-          + "with locationType of '" + locationType + "'" + packageRelativeMessage;
+          + "with locationType of '" + locationType + "'." + testClassRelativeMessage;
       throw new MongoUnitException(message, exception);
     }
 
@@ -1900,12 +1937,20 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param location Path to the file.
-   * @return Contents of the file pointed to by the provided 'location' relative to the root of the
-   * classpath.
+   * @param packagedClass Class based on whose package the returned path is constructed. Can be
+   * 'null'.
+   * @return 'null' if the provided 'relativePackageClass' is 'null', otherwise, a string that
+   * consists of a leading '/' followed by 'relativePackageClass' package name converted into a path
+   * combined with trailing '/'.
    */
-  public static String retrieveResourceFromFile(String location) throws MongoUnitException {
-    return retrieveResourceFromFile(location, LocationType.CLASSPATH_ROOT, null);
+  public static String getTestClassNamePath(Class<?> packagedClass) {
+
+    // Return "null" if packagedClass is null
+    if (packagedClass == null) {
+      return "null";
+    }
+
+    return "/" + packagedClass.getPackageName().replace(".", "/");
   }
 
   /**
@@ -1917,6 +1962,8 @@ public class MongoUnitUtil {
    *
    * @param annotation Instance of the {@link SeedWithDataset} annotation.
    * @param context Test execution context within which the test is being executed.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @param classLevel Flag which if set to 'true', indicates that this annotation was placed on a
    * class as opposed to method.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by the 'value' or
@@ -1928,12 +1975,45 @@ public class MongoUnitUtil {
   private static List<MongoUnitCollection> processSeedWithDatasetAnnotation(
       SeedWithDataset annotation,
       ExtensionContext context,
+      String testClassName,
       boolean classLevel) throws MongoUnitException {
 
     String[] value = annotation.value();
     String[] locations = annotation.locations();
     LocationType locationType = annotation.locationType();
     Class<?> relativePackageClass = context.getRequiredTestClass();
+
+    String[] fileLocations =
+        getFileLocations(context, value, locations, classLevel, testClassName, "-seed.json");
+
+    return retrieveDatasetFromLocations(
+        fileLocations,
+        locationType,
+        relativePackageClass,
+        testClassName);
+  }
+
+  /**
+   * @param context Test execution context within which the test is being executed.
+   * @param value Value of the 'value' part of xxxDataset annotation.
+   * @param locations Value of the 'locations' part of the xxxDataset annotation.
+   * @param classLevel True if extracted values were at the class level, false otherwise.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
+   * @param fileEndingAndExtension String that contains some ending with an extension. (Usually
+   * '-seed.json' or '-expected.json' for seeding and assertions accordingly.
+   * @return Array of locations. Check if 'value' or 'locations' is a non-empty array. If both are
+   * empty, uses 'testClassName' and 'standardExtension' to generate a default file name location
+   * based on whether or not this data was from a class level annotation or method level one (which
+   * is determined by the provided 'classLevel').
+   */
+  public static String[] getFileLocations(
+      ExtensionContext context,
+      String[] value,
+      String[] locations,
+      boolean classLevel,
+      String testClassName,
+      String fileEndingAndExtension) {
 
     String[] fileLocations;
 
@@ -1948,16 +2028,16 @@ public class MongoUnitUtil {
 
     } else {
 
-      // Choose between a class and method based standard file name
+      // Choose between a class and method based default file name
       String fileName = classLevel ?
-          context.getRequiredTestClass().getSimpleName() + "-seed.json" :
-          context.getRequiredTestMethod().getName() + "-seed.json";
+          testClassName + fileEndingAndExtension :
+          context.getRequiredTestMethod().getName() + fileEndingAndExtension;
 
       fileLocations = new String[1];
-      fileLocations[0] = retrieveResourcePathBasedOnStandardLocation("SeedWithDataset", fileName);
+      fileLocations[0] = fileName;
     }
 
-    return retrieveDatasetFromLocations(fileLocations, locationType, relativePackageClass);
+    return fileLocations;
   }
 
   /**
@@ -1968,9 +2048,10 @@ public class MongoUnitUtil {
    *
    * @param fileLocations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'fileLocations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be null.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'fileLocations'.
    * @throws MongoUnitException If 'value' or 'locations' point to a file that does not exist or
@@ -1980,13 +2061,15 @@ public class MongoUnitUtil {
   public static List<MongoUnitCollection> retrieveDatasetFromLocations(
       String[] fileLocations,
       LocationType locationType,
-      Class<?> relativePackageClass) throws MongoUnitException {
+      Class<?> relativePackageClass,
+      String testClassName) throws MongoUnitException {
 
     // Loop over locations, retrieve dataset content and convert/collect to MongoUnitCollection
     List<MongoUnitCollection> finalMongoUnitCollectionDataset = new ArrayList<>();
     for (String fileLocation : fileLocations) {
 
-      String dataset = retrieveResourceFromFile(fileLocation, locationType, relativePackageClass);
+      String dataset =
+          retrieveResourceFromFile(fileLocation, locationType, relativePackageClass, testClassName);
       List<MongoUnitCollection> mongoUnitCollections = toMongoUnitTypedCollectionsFromJson(dataset);
 
       finalMongoUnitCollectionDataset.addAll(mongoUnitCollections);
@@ -2003,6 +2086,8 @@ public class MongoUnitUtil {
    *
    * @param annotation Instance of the {@link AssertMatchesDataset} annotation.
    * @param context Test execution context within which the test is being executed.
+   * @param testClassName Name of the test class, which is either {@link MongoUnitTest} specified
+   * name or, if not specified, the simple class name of the test class.
    * @param classLevel Flag which if set to 'true', indicates that this annotation was placed on a
    * class as opposed to method.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by the 'value' or
@@ -2016,6 +2101,7 @@ public class MongoUnitUtil {
   private static List<MongoUnitCollection> processAssertMatchesDatasetAnnotation(
       AssertMatchesDataset annotation,
       ExtensionContext context,
+      String testClassName,
       boolean classLevel) throws MongoUnitException {
 
     String[] locations = annotation.locations();
@@ -2038,72 +2124,21 @@ public class MongoUnitUtil {
       return new ArrayList<>();
     }
 
-    String[] fileLocations;
     List<MongoUnitCollection> finalMongoUnitCollectionDataset = new ArrayList<>();
 
-    // Choose locations between 'value', 'locations', or standard locations
-    if (value.length != 0) {
-
-      fileLocations = value;
-
-    } else if (locations.length != 0) {
-
-      fileLocations = locations;
-
-    } else {
-
-      // Choose between a class and method based standard file name
-      String fileName = classLevel ?
-          context.getRequiredTestClass().getSimpleName() + "-expected.json" :
-          context.getRequiredTestMethod().getName() + "-expected.json";
-
-      fileLocations = new String[1];
-      fileLocations[0] =
-          retrieveResourcePathBasedOnStandardLocation("AssertMatchesDataset", fileName);
-    }
+    String[] fileLocations =
+        getFileLocations(context, value, locations, classLevel, testClassName, "-expected.json");
 
     // Loop over locations, retrieve dataset content and convert/collect to MongoUnitCollection
     for (String fileLocation : fileLocations) {
-      String dataset = retrieveResourceFromFile(fileLocation, locationType, relativePackageClass);
+      String dataset =
+          retrieveResourceFromFile(fileLocation, locationType, relativePackageClass, testClassName);
       List<MongoUnitCollection> mongoUnitCollections = toMongoUnitTypedCollectionsFromJson(dataset);
 
       finalMongoUnitCollectionDataset.addAll(mongoUnitCollections);
     }
 
     return finalMongoUnitCollectionDataset;
-  }
-
-  /**
-   * @param annotationName Name of the annotation for error reporting purposes.
-   * @param fileName File name to check for.
-   * @return File path relative to the classpath root where the standard-named file with the dataset
-   * is located. The method will check at the root of the classpath as well as in the '/mongounit'
-   * directory relative the classpath root.
-   * @throws MongoUnitException If the provided 'fileName' is not found at the classpath root nor in
-   * the '/mongounit' directory relative to the classpath root.
-   */
-  private static String retrieveResourcePathBasedOnStandardLocation(
-      String annotationName,
-      String fileName) throws MongoUnitException {
-
-    String filePath = "/" + fileName;
-
-    // Check if exists at the classpath root
-    if (MongoUnitUtil.class.getResource(filePath) != null) {
-      return filePath;
-    }
-
-    // Check if exists at the classpath root /mongounit
-    filePath = "/mongounit" + filePath;
-    if (MongoUnitUtil.class.getResource(filePath) != null) {
-      return filePath;
-    }
-
-    // Neither location was successful, throw exception
-    String message = annotationName + " did not contain a specific location. File at the standard "
-        + "locations of 'classpath_root'/" + fileName + " or 'classpath_root/mongounit/"
-        + fileName + " was not found.";
-    throw new MongoUnitException(message);
   }
 }
 

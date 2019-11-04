@@ -9,6 +9,10 @@
 package org.mongounit;
 
 import static org.mongounit.MongoUnitExtension.CURRENT_MONGO_DATABASE;
+import static org.mongounit.MongoUnitUtil.extractTestClassName;
+import static org.mongounit.MongoUnitUtil.fromDatabase;
+import static org.mongounit.MongoUnitUtil.retrieveDatasetFromLocations;
+import static org.mongounit.MongoUnitUtil.toDatabase;
 import static org.mongounit.config.MongoUnitConfigurationUtil.loadMongoUnitProperties;
 
 import com.mongodb.client.MongoDatabase;
@@ -48,9 +52,9 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose packaged
+   * location should be used for relativity of the 'location' path. Otherwise, it's ignored and can
+   * be null.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
    * 'locations'.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
@@ -69,7 +73,7 @@ public class MongoUnit {
     // Seed database
     MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
-    MongoUnitUtil.toDatabase(seedWithDataset, mongoDatabase, mongoUnitProperties);
+    toDatabase(seedWithDataset, mongoDatabase, mongoUnitProperties);
 
     return seedWithDataset;
   }
@@ -79,14 +83,15 @@ public class MongoUnit {
    * array. Returns a list of {@link MongoUnitCollection}s that can optionally be reused for
    * assertions in the 'assertMatches*' methods.
    *
-   * @param locations Array paths to the files containing datasets. The locations are assumed to be
-   * relative to the classpath root.
+   * @param locations Array of paths to the files containing datasets. The locations type is
+   * 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
-   * 'locations'.
+   * 'locations' and 'testClass'.
    */
   @SuppressWarnings("UnusedReturnValue")
-  public static List<MongoUnitCollection> seedWithDataset(String[] locations) {
-    return seedWithDataset(locations, LocationType.CLASSPATH_ROOT, null);
+  public static List<MongoUnitCollection> seedWithDataset(String[] locations, Class<?> testClass) {
+    return seedWithDataset(locations, LocationType.CLASS, testClass);
   }
 
   /**
@@ -94,14 +99,15 @@ public class MongoUnit {
    * array. Returns a list of {@link MongoUnitCollection}s that can optionally be reused for
    * assertions in the 'assertMatches*' methods.
    *
-   * @param location Path to the file containing a dataset. The location is assumed to be relative
-   * to the classpath root.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s based on the data pointed to by provided
-   * 'location'.
+   * 'location' and 'testClass'.
    */
   @SuppressWarnings("UnusedReturnValue")
-  public static List<MongoUnitCollection> seedWithDataset(String location) {
-    return seedWithDataset(new String[]{location}, LocationType.CLASSPATH_ROOT, null);
+  public static List<MongoUnitCollection> seedWithDataset(String location, Class<?> testClass) {
+    return seedWithDataset(new String[]{location}, LocationType.CLASS, testClass);
   }
 
   /**
@@ -111,9 +117,8 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be null.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
    * locations.
    */
@@ -130,7 +135,7 @@ public class MongoUnit {
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = MongoUnitUtil.fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
 
     // Perform assertion
     performAssertion(expectedDataset, actualDataset);
@@ -138,30 +143,37 @@ public class MongoUnit {
 
   /**
    * Asserts that whatever is currently in the database connected to by the MongoUnit framework
-   * matches the JSON datasets contained in files pointed to by the provided classpath root relative
-   * 'locations' array of paths.
+   * matches the JSON datasets contained in files pointed to by the provided 'locations' array of
+   * paths. The locations type is 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more
+   * detail.
    *
-   * @param locations Array paths to the files containing datasets. The locations are assumed to be
-   * classpath root relative.
+   * @param locations Array paths to the files containing datasets. The locations type is 'CLASS' .
+   * See javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
    * locations.
    */
-  public static void assertMatchesDataset(String[] locations) throws MongoUnitException {
-    assertMatchesDataset(locations, LocationType.CLASSPATH_ROOT, null);
+  public static void assertMatchesDataset(
+      String[] locations,
+      Class<?> testClass) throws MongoUnitException {
+    assertMatchesDataset(locations, LocationType.CLASS, testClass);
   }
 
   /**
    * Asserts that whatever is currently in the database connected to by the MongoUnit framework
-   * matches the JSON dataset contained in the file pointed to by the provided classpath root
-   * relative 'location'.
+   * matches the JSON datasets contained in files pointed to by the provided 'location' path. The
+   * location type is 'CLASS'. See javadoc org.mongounit.LocationType#CLASS for more detail.
    *
-   * @param location Path to the file containing a dataset. The location is assumed to be classpath
-   * root relative.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @throws MongoUnitException If something goes wrong with loading the dataset from the specified
    * location.
    */
-  public static void assertMatchesDataset(String location) throws MongoUnitException {
-    assertMatchesDataset(new String[]{location}, LocationType.CLASSPATH_ROOT, null);
+  public static void assertMatchesDataset(
+      String location,
+      Class<?> testClass) throws MongoUnitException {
+    assertMatchesDataset(new String[]{location}, LocationType.CLASS, testClass);
   }
 
   /**
@@ -183,7 +195,7 @@ public class MongoUnit {
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = MongoUnitUtil.fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
 
     // Combine so there are no same-named repeated collections are present
     List<MongoUnitCollection> expectedDataset = MongoUnitUtil
@@ -199,7 +211,7 @@ public class MongoUnit {
    * @throws MongoUnitException If something goes wrong during the assertion.
    */
   public static void assertMatchesEmptyDataset() throws MongoUnitException {
-    assertMatchesDataset((List<MongoUnitCollection>) null);
+    assertMatchesDataset(null);
   }
 
   /**
@@ -208,9 +220,9 @@ public class MongoUnit {
    *
    * @param locations Array paths to the files containing datasets.
    * @param locationType Type of location the provided 'locations' are.
-   * @param relativePackageClass If 'locationType' is 'PACKAGE', this is the class type whose
-   * package should be used for package relative 'location' path. Otherwise, it's ignored and can be
-   * null.
+   * @param relativePackageClass If 'locationType' is 'CLASS', this is the class type whose package
+   * should be used for package relative 'location' path. Otherwise, it's ignored and can be
+   * 'null'.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'locations' array of paths.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
@@ -226,8 +238,9 @@ public class MongoUnit {
     checkLocations(locations);
 
     // Retrieve dataset content and convert/collect to MongoUnitCollection
+    String testClassName = extractTestClassName(relativePackageClass);
     List<MongoUnitCollection> tempSeedWithDataset =
-        MongoUnitUtil.retrieveDatasetFromLocations(locations, locationType, relativePackageClass);
+        retrieveDatasetFromLocations(locations, locationType, relativePackageClass, testClassName);
 
     // Combine so there are no same-named repeated collections are present
     return MongoUnitUtil.combineNoRepeatingCollections(tempSeedWithDataset);
@@ -235,36 +248,46 @@ public class MongoUnit {
 
   /**
    * Returns a list of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
-   * the provided 'locations' array of paths. The 'locations' are assumed to be classpath root
-   * relative.
+   * the provided 'locations' array of paths. The locations type is 'CLASS'. See javadoc org
+   * .mongounit.LocationType#CLASS for more detail.
    *
-   * @param locations Array paths to the files containing datasets. The 'locations' are assumed to
-   * be classpath root relative.
+   * @param locations Array paths to the files containing datasets. The locations type is 'CLASS' .
+   * See javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'locations' array of paths.
    * @throws MongoUnitException If something goes wrong with loading datasets from the specified
    * 'locations'.
    */
-  public static List<MongoUnitCollection> loadDatasetFromLocations(String[] locations)
+  public static List<MongoUnitCollection> loadDatasetFromLocations(
+      String[] locations,
+      Class<?> testClass)
       throws MongoUnitException {
-    return loadDatasetFromLocations(locations, LocationType.CLASSPATH_ROOT, null);
+    return loadDatasetFromLocations(locations, LocationType.CLASS, testClass);
   }
 
   /**
    * Returns a list of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
-   * the provided 'locations' array of paths. The 'locations' are assumed to be classpath root
-   * relative.
+   * the provided 'locations' array of paths. The location type is 'CLASS'. See javadoc
+   * org.mongounit.LocationType#CLASS for more detail.
    *
-   * @param location Path to the file containing a dataset. The 'location' are assumed to be
-   * classpath root relative.
+   * @param location Path to the file containing a dataset. The location type is 'CLASS'. See
+   * javadoc org.mongounit.LocationType#CLASS for more detail.
+   * @param testClass Class instance of the test class.
    * @return List of {@link MongoUnitCollection}s that represent the JSON-based data pointed to by
    * the provided 'location' path.
    * @throws MongoUnitException If something goes wrong with loading dataset from the specified
    * 'location'.
    */
-  public static List<MongoUnitCollection> loadDatasetFromLocation(String location)
+  public static List<MongoUnitCollection> loadDatasetFromLocation(
+      String location,
+      Class<?> testClass)
       throws MongoUnitException {
-    return loadDatasetFromLocations(new String[]{location}, LocationType.CLASSPATH_ROOT, null);
+
+    return loadDatasetFromLocations(
+        new String[]{location},
+        LocationType.CLASS,
+        testClass);
   }
 
   /**
