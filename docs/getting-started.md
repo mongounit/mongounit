@@ -26,7 +26,7 @@ Be sure to include `<scope>test</scope>` so **mongoUnit** only shows up in your 
 
 See a complete example of [`pom.xml`](https://github.com/mongounit/mongounit-demo2/blob/master/pom.xml).
 
-## Annotate the test class with `@MongoUnitTest`
+## Annotate the test class with @MongoUnitTest
 
 ```java
 @SpringBootTest
