@@ -1,5 +1,3 @@
-![mongoUnit logo](https://mongoUnit.org/assets/images/mongoUnit-logo.png)
-
 ## What is mongoUnit?
 
 **mongoUnit** is a data driven Integration testing framework for Spring Boot based applications that use MongoDB for persistence. The framework enables the developer to test the data access logic with relative ease.
