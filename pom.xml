@@ -13,10 +13,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>mongounit</name>
-  <description>MongoUnit is a Data Driven Integration Testing Framework for testing the data access
-    layer backed by a MongoDB database.
+  <description>MongoUnit is a data driven Integration testing framework for Spring Boot based
+    applications that use MongoDB for persistence. The framework enables the developer to test the
+    data access logic with relative ease.
   </description>
 
   <url>https://github.com/mongounit/mongounit</url>
