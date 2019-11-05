@@ -17,4 +17,3 @@ nav_order: 1
 
 **mongoUnit** can also help you to verify that your database data match an expected set of values.
 
-## Features
