@@ -39,3 +39,45 @@ public class MongoPersonDaoServiceIT {
   ...
   ...
 ```
+
+The `@MongoUnitTest` annotation causes a few things to happen automatically.
+
+Be default, **mongoUnit** will create a database with URI of `mongodb://localhost:27017/mongounit-testdb_yourUserName_yyyy_MM_dd_HH_mm_ss_randomHash`. Also, now, before each test in this class, the database will be wiped by dropping all of its collections, ready to be seeded with the initial state data for the next test.
+
+The database name is date/time stamped and randomized on purpose so multiple runs can happen in parallel without stepping on each other. For example, if the team has a single development server which is used by the Continous Integration server. In such a case, it's common that several Pull Requests are getting verified and running at the same time.
+
+## Optinally annotate the test method with either @SeedWithDataset and/or @AssertMatchesDataset
+
+Before any `@SeedWithDataset` annotations are placed, the database is 100% empty. While it's possible that you'd want to start with an empty state, usually, you would want to populate the database with at least some initial data.
+
+```java
+@Test
+  @DisplayName("Create person on a non-empty database")
+  @SeedWithDataset
+  @AssertMatchesDataset
+  void createPersonWithExistingData() {
+
+    CreatePersonRequest request = CreatePersonRequest.builder()
+        .name("Robert")
+        .address(Address.builder().street("13 Builder St.").zipcode(12345).build())
+        .favColors(Arrays.asList("blue", "white"))
+        .positionName("Builder")
+        .build();
+
+    mongoPersonDaoService.createPerson(request);
+  }
+```
+
+Both annotations (`@SeedWithDataset` and `@AssertMatchesDataset`) rely on some JSON file(s) which contain the actual data.
+
+By default, **mongoUnit** will look for the JSON file based on the path mirroring the fully qualified test class path (including the class name itself as the deepest directory name) together with the method name.
+
+By default, `@SeedWithDataset` will look for a file named in the format of `methodName-seed.json` and `@AssertMatchesDataset` will look for a file named in the format of `methodName-expected.json`.
+
+For example, if the test class annotated with `@MongoUnitTest` is `org.mongounit.demo.dao.mongo.MongoPersonDaoServiceIT`, the `@SeedWithDataset` annotation on the `createPersonWithExistingData` will look for a file located at `/org/mongounit/demo/dao/mongo/MongoPersonDaoServiceIT/createPersonWithExistingData-seed.json` and the `@AssertMatchesDataset` annotation on the same method will look for a file located at `/org/mongounit/demo/dao/mongo/MongoPersonDaoServiceIT/createPersonWithExistingData-expected.json`.
+
+Note that both paths start with a `/`, which signifies the classpath root.
+
+
+
+
