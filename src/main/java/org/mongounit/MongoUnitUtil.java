@@ -1335,8 +1335,8 @@ public class MongoUnitUtil {
    *
    * If the "comparator" field is not specified, it's assumed to be "=".
    *
-   * "&gt;" assertion is read: is expected greater than actual, i.e., expected > actual. "&lt;"
-   * assertion is read: is expected less than actual, i.e., expected < actual, etc.
+   * "&gt;" assertion is read: is expected greater than actual, i.e., expected &gt; actual. "&lt;"
+   * assertion is read: is expected less than actual, i.e., expected &lt; actual, etc.
    *
    * These comparisons will ONLY work for strings, dates, date/time stamps, numbers (or any type
    * that implements {@link Comparable} interface).
