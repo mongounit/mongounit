@@ -1,5 +1,25 @@
-title: mongoUnit
-description: MongoUnit is a Java Spring Boot Based Data Driven Integration Testing Framework that Makes It Easy To Test The Data Access Code In Your Applications
-show_downloads: true
-google_analytics:
-theme: jekyll-theme-cayman
+title: "mongoUnit Integration Testing Framework"
+description: "MongoUnit is a data driven Integration testing framework for Spring Boot based applications that use MongoDB for persistence. The framework enables the developer to test the data access logic with relative ease."
+remote_theme: pmarsceill/just-the-docs
+search_enabled: false
+
+# Set a path/url to a logo that will be displayed instead of the title
+logo: "/assets/images/mongoUnit-logo.png"
+
+# Aux links for the upper right navigation
+aux_links:
+  "mongoUnit on GitHub":
+    - "//github.com/mongounit/mongounit"
+
+# Heading anchor links appear on hover over h1-h6 tags in page content
+# allowing users to deep link to a particular heading on a page.
+#
+# Supports true (default) or false/nil
+heading_anchors: true
+
+# Footer content appears at the bottom of every page's main content
+footer_content: "Copyright &copy; 2019 Yaakov Chaikin. Distributed by an <a href=\"https://github.com/mongounit/mongounit/blob/master/LICENSE\">Apache License 2.0.</a>"
+
+# Google Analytics Tracking (optional)
+# e.g, UA-1234567-89
+ga_tracking: UA-17423367-5
