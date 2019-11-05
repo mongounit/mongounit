@@ -1,37 +1,11 @@
-## Welcome to GitHub Pages
+![mongoUnit logo](https://raw.githubusercontent.com/mongounit/mongounit/master/misc/mongoUnit-logo.png)
 
-You can use the [editor on GitHub](https://github.com/mongounit/mongounit/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+## What is this framework?
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+**mongoUnit** is a data driven Integration testing framework for Spring Boot based applications that use MongoDB for persistence. The framework enables the developer to test the data access logic with relative ease.
 
-### Markdown
+You see the complete documentation on how to use this framework at [mongoUnit.org](https://mongoUnit.org)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Issues?
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/mongounit/mongounit/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+If you find a bug or think that a feature might be really useful to your team, please look through [current issues](https://github.com/mongounit/mongounit/issues), and if you don't find yours, create a new one.
