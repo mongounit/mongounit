@@ -4,7 +4,7 @@
 
 **mongoUnit** is a data driven Integration testing framework for Spring Boot based applications that use MongoDB for persistence. The framework enables the developer to test the data access logic with relative ease.
 
-You see the complete documentation on how to use this framework at [mongoUnit.org](https://mongoUnit.org)
+You can see the complete documentation on how to use this framework at [mongoUnit.org](https://mongoUnit.org)
 
 ## Issues?
 
