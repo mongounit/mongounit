@@ -979,11 +979,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
-   * by default if the special document containing "comparator" is not present. "<" and ">" compare
-   * values to ensure one is less than or greater than the other. These comparisons will work for
-   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
-   * interface).
+   * value can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is how every field
+   * value compared by default if the special document containing "comparator" is not present.
+   * "&lt;" and "&gt;" compare values to ensure one is less than or greater than the other. These
+   * comparisons will work for Strings, dates, date/time stamps, numbers (or any type that
+   * implements {@link Comparable} interface).
    *
    * @param expected List of {@link MongoUnitCollection}s that the provided 'actual' dataset is to
    * be compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1064,11 +1064,11 @@ public class MongoUnitUtil {
    *
    * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
    * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every field value compared
-   * by default if the special document containing "comparator" is not present. "<" and ">" compare
-   * values to ensure one is less than or greater than the other. These comparisons will work for
-   * Strings, dates, date/time stamps, numbers (or any type that implements {@link Comparable}
-   * interface).
+   * value can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is how every field
+   * value compared by default if the special document containing "comparator" is not present.
+   * "&lt;" and "&gt;" compare values to ensure one is less than or greater than the other. These
+   * comparisons will work for Strings, dates, date/time stamps, numbers (or any type that
+   * implements {@link Comparable} interface).
    *
    * @param expected {@link MongoUnitCollection}s that the provided 'actual' dataset is to be
    * compared against. An identical list is not necessarily to achieve a match and thus this list
@@ -1327,15 +1327,16 @@ public class MongoUnitUtil {
    * Returns {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue' and
    * 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
    *
-   * The value of "comparator" can be either "=", "!=", ">", "<", ">=", "<=". The "=" is how every
-   * field value compared by default if the special document containing "comparator" is not present.
-   * "<" and ">" compare values to ensure one is less than or greater than the other. The ">=" and
-   * "<=" compare values to ensure one is less than or greater than or equal to the other.
+   * The value of "comparator" can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is
+   * how every field value compared by default if the special document containing "comparator" is
+   * not present. "&lt;" and "&gt;" compare values to ensure one is less than or greater than the
+   * other. The "&gt;=" and "&lt;=" compare values to ensure one is less than or greater than or
+   * equal to the other.
    *
    * If the "comparator" field is not specified, it's assumed to be "=".
    *
-   * ">" assertion is read: is expected greater than actual, i.e., expected > actual. "<" assertion
-   * is read: is expected less than actual, i.e., expected < actual, etc.
+   * "&gt;" assertion is read: is expected greater than actual, i.e., expected > actual. "&lt;"
+   * assertion is read: is expected less than actual, i.e., expected < actual, etc.
    *
    * These comparisons will ONLY work for strings, dates, date/time stamps, numbers (or any type
    * that implements {@link Comparable} interface).
