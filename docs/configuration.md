@@ -13,6 +13,8 @@ All of the **mongoUnit** configuration options can be applied on a "one-off" bas
 
 **mongoUnit** will look for `mongounit.properties` file at the root of the classpath to detect these configuration options.
 
+For an example use of the `mongounit.properties` files, see [mongounit-demo2](https://github.com/mongounit/mongounit-demo2) project.
+
 The following is a table of all of the configuration options:
 
 | Option | Description |
