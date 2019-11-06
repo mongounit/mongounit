@@ -54,10 +54,42 @@ Outside of `OBJECT_ID` and `DATE_TIME` Bson types, it's rarely necessary to spec
 However, when it comes to `OBJECT_ID` and `DATE_TIME` Bson types, relying on the automatic type interpretation is usually not a good idea. It causes MongoDB and the **mongoUnit** framework to handle these as STRING data type, which is not usually good enough for interacting with its values.
 
 When you need to specify the type of a value, follow this format:
-```json
+```
 "fieldName": {
   "$$BSON_TYPE": value
 }
 ```
 
+The `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
 
+The `BSON_TYPE` is the Bson type that directly corresponds to the `enum` names/constant of the [`BsonType` class](https://mongodb.github.io/mongo-java-driver/3.11/javadoc/org/bson/BsonType.html), which is part of the MongoDB Java driver.
+
+
+
+
+## Supported Bson types
+
+Not all of the available Bson types listed in the [`BsonType` class](https://mongodb.github.io/mongo-java-driver/3.11/javadoc/org/bson/BsonType.html) are supported, but all of the types you'd normally want to use in testing are supported.
+
+Here is the list of the supported Bson types:
+```
+ARRAY
+DOCUMENT
+DOUBLE
+STRING
+BINARY
+OBJECT_ID
+BOOLEAN
+DATE_TIME
+NULL
+UNDEFINED
+REGULAR_EXPRESSION
+DB_POINTER
+JAVASCRIPT
+SYMBOL
+JAVASCRIPT_WITH_SCOPE
+INT32
+TIMESTAMP
+INT64
+DECIMAL128
+```
