@@ -28,3 +28,15 @@ If the **mongoUnit** framework fails to find any of the the seed data file(s), a
 Specifying multiple locations has a cumulative seeding effect, i.e., the data is seeded into the database sequentially and is combined in the order specified in the `locations` array before a test method is executed.
 
 The same cumulative seeding effect applies if multiple `@SeedWithDataset` are applied to either a method or a class. If the `@SeedWithDataset` is applied at the class level and another one is applied at the method level, the class level datasets are applied to the database first followed by the method level datasets.
+
+## Reusing seeding data for assertion
+
+The `@SeedWithDataset` annotation has an extra option to signal to the **mongoUnit** framework that the seeding data should be reused as is for assertion as well. This can be done with the `reuseForAssertion` property:
+
+```java
+@SeedWithDataset(reuseForAssertion = true)
+```
+
+The same cumulative effect with the rest of the `@AssertMatchesDataset` annotations applies to the reused seeding dataset as well. In other words, the seeding dataset is combined with any other dataset specified in `@AssertMatchesDataset` sequentially.
+
+For example, this is useful when a certain set of data is not supposed to change after the target code execution. The seeded data can then be reused for assertion as well.
