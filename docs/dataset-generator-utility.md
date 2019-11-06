@@ -19,7 +19,7 @@ You can do this by running your code and then examining the database (either on 
 
 The data doesn't have to be perfect. As long as the bulk of it is the way you want it, you can edit some of the details later by hand.
 
-Run the following command:
+### Step 2: Run the following command:
 
 ```bash
 $ java -jar mongounit-1.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
