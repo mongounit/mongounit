@@ -48,24 +48,26 @@ The database name is date/time stamped and randomized on purpose so multiple run
 
 ## Optinally annotate the test method with either @SeedWithDataset and/or @AssertMatchesDataset
 
+While these annotations are optional, unless you are setting up initial database state manually with the methods from `MongoUnit` class, usually, these annotations are used.
+
 Before any `@SeedWithDataset` annotations are placed, the database is 100% empty. While it's possible that you'd want to start with an empty state, usually, you would want to populate the database with at least some initial data.
 
 ```java
 @Test
-  @DisplayName("Create person on a non-empty database")
-  @SeedWithDataset
-  @AssertMatchesDataset
-  void createPersonWithExistingData() {
+@DisplayName("Create person on a non-empty database")
+@SeedWithDataset
+@AssertMatchesDataset
+void createPersonWithExistingData() {
 
-    CreatePersonRequest request = CreatePersonRequest.builder()
-        .name("Robert")
-        .address(Address.builder().street("13 Builder St.").zipcode(12345).build())
-        .favColors(Arrays.asList("blue", "white"))
-        .positionName("Builder")
-        .build();
+  CreatePersonRequest request = CreatePersonRequest.builder()
+      .name("Robert")
+      .address(Address.builder().street("13 Builder St.").zipcode(12345).build())
+      .favColors(Arrays.asList("blue", "white"))
+      .positionName("Builder")
+      .build();
 
-    mongoPersonDaoService.createPerson(request);
-  }
+  mongoPersonDaoService.createPerson(request);
+}
 ```
 
 Both annotations (`@SeedWithDataset` and `@AssertMatchesDataset`) rely on some JSON file(s) which contain the actual data.
@@ -78,6 +80,28 @@ For example, if the test class annotated with `@MongoUnitTest` is `org.mongounit
 
 Note that both paths start with a `/`, which signifies the classpath root.
 
+## Generate JSON snapshot of the database
 
+**mongoUnit** comes with a utility that allows you to create the `seed.json` file from an existing database.
 
+The usualy process is for you populate the database (either with some tool or by running a single test), inspect the database to verify it's close to the state you want and then run the **mongoUnit** provided utility to generate the JSON file representing the entire database.
+
+You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/1.0.0/mongounit-1.0.0-jar-with-dependencies.jar) from maven central.
+
+To use it with its minimal customizations:
+
+```bash
+$ java -jar mongounit-1.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+
+**************************
+**** JSON was written to /.../output.json
+**************************
+$ 
+```
+
+This utility only *reads* from the database. It does not write anything to the database.
+
+Once the `output.json` is generated, you can place it into the proper directory (e.g., `src/test/resources/org/mongounit/demo/dao/mongo/MongoPersonDaoServiceIT/` and name it appropriately.
+
+The same process can be followed to generate the JSON file that would represent the "post" test execution database state. Alternatively, you can take the previously generated seed file, copy it, rename it, and modify it to the state you expect the database to be after the test execution.
 
