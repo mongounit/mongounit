@@ -1,5 +1,5 @@
 ---
-title: JSON Format (seed and expected)
+title: JSON Format (seed & expected)
 nav_order: 4
 ---
 
