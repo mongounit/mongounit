@@ -1,5 +1,5 @@
 ---
-title: @SeedWithDataset
+title: SeedWithDataset
 nav_order: 7
 ---
 
