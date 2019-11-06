@@ -17,7 +17,7 @@ nav_order: 1
 
 **mongoUnit** can also help you to verify that your database data match an expected set of values.
 
-## mongoUnit in action
+## See mongoUnit in action
 
 If you want to see a working (demo) project that uses **mongoUnit**, take a look at [mongounit-demo2](https://github.com/mongounit/mongounit-demo2).
 
