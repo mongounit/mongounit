@@ -56,8 +56,8 @@ The following table presents all of the commandline arguments the dataset genera
 
 | Option | Required? | Description |
 | --- | --- | --- |
-| -dbUri | yes | Must be a valid MongoDB URI. Must start with 'mongodb'. Can contain username/password. |
-| -output | no |  An absolute or relative path to the file that should be created with the dataset output in JSON format. An existing file with the same name will be erased. If '-output' is specified, it MUST end with '.json'. Defaults to './output.json' if '-output' is omitted. |
-| -collectionNames | no | Comma separated list of collection to limit dataset generation to. No spaces allowed between collection names. Defaults to all collections in the database. |
-| -preserveBsonTypes | no | comma separated list of BSON types to generate explicit MongoUnit BSON type specification for. The string types are enum names from the org.bson.BsonType. If not specified, defaults to OBJECT_ID and DATE_TIME. |
-| -mongoUnitValueFieldNameIndicator | no | Field name to use in developer JSON files to signify that a document is a representation of a special MongoUnit value. If not specified, defaults to $$. |
+| `-dbUri` | yes | Must be a valid MongoDB URI. Must start with `mongodb`. Can contain username/password. |
+| `-output` | no |  An absolute or relative path to the file that should be created with the dataset output in JSON format. An existing file with the same name will be erased. If `-output` is specified, it MUST end with `.json`. Defaults to `./output.json` if `-output` is omitted. |
+| `-collectionNames` | no | Comma separated list of collection to limit dataset generation to. No spaces allowed between collection names. Defaults to all collections in the database. |
+| `-preserveBsonTypes` | no | comma separated list of BSON types to generate explicit **mongoUnit** BSON type specification for. The string types are enum names from the `org.bson.BsonType`. If not specified, defaults to `OBJECT_ID` and `DATE_TIME`. |
+| `-mongoUnitValueFieldNameIndicator` | no | Field name to use in developer JSON files to signify that a document is a representation of a special **mongoUnit** value. If not specified, defaults to `$$`. |
