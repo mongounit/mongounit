@@ -1,5 +1,5 @@
 ---
-title: @AssertMatchesDataset
+title: AssertMatchesDataset
 nav_order: 8
 ---
 
