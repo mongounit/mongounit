@@ -27,7 +27,7 @@ The same thing applies to the JSON-based files that verify the database state af
 Developer mistakes happen. By default, **mongoUnit** uses a testing database URI, but even if you point **mongoUnit** to a
 slightly more important database server, **mongoUnit** will avoid erasing or corrupting the database. Instead, it will create
 another database with a similar name. (*Obviously*, you should NEVER point your testing code to a database that has production
-data, even with the **mongoUnit** protections built in.
+data, even with the **mongoUnit** protections built in.)
 
 In the end, sure, you can still wragle **mongoUnit** to wipe your production data, but you would have to *work at it*.
 In other words, making this mistake is harder than not making it.
