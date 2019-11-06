@@ -105,3 +105,7 @@ Once the `output.json` is generated, you can place it into the proper directory 
 
 The same process can be followed to generate the JSON file that would represent the "post" test execution database state. Alternatively, you can take the previously generated seed file, copy it, rename it, and modify it to the state you expect the database to be after the test execution.
 
+Please see [Seed & Assertion JSON Formats](https://mongounit.org/json-format.html) for more details. 
+
+Pay particular attention to the [Special Rule for Assertions](https://mongounit.org/json-format.html#special-rule-for-assertions)
+
