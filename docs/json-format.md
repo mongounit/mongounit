@@ -1,15 +1,15 @@
 ---
-title: JSON Format (seed & expected)
+title: Seed & Assertion JSON Formats
 nav_order: 4
 ---
 
 # JSON Format
 
-## Seeding format
+## Seeding JSON format
 
 Essentially, the seeding JSON format is simply an array of collection objects, each of which has a `collectionName` and an array of `documents`.
 
-For example
+For example:
 
 ```json
 [
@@ -51,7 +51,9 @@ Note that it's not necessary to specify the `_id` field if its value is insignif
 
 Outside of `OBJECT_ID` and `DATE_TIME` Bson types, it's rarely necessary to specify the BSON types explicitely and one can rely on the automatic type interpretation. For example, the `name` field is specified directly as `"name": "Bob The Builder"`. The STRING Bson type is assumed.
 
-However, when it comes to `OBJECT_ID` and `DATE_TIME` Bson types, relying on the automatic type interpretation is usually not a good idea. It causes MongoDB and the **mongoUnit** framework to handle these as STRING data type, which is not usually good enough for interacting with its values.
+However, when it comes to `OBJECT_ID` and `DATE_TIME` Bson types, relying on the automatic type interpretation is usually not a good idea. It causes MongoDB and the **mongoUnit** framework to handle these as STRING data type, which is not usually good enough for interacting with its values. 
+
+By default, the [dataset generator utility](https://mongounit.org/getting-started.html#generate-json-snapshot-of-the-database) creates all `OBJECT_ID` and `DATE_TIME` values explicitely annotated in the generated JSON file.
 
 When you need to specify the type of a value, follow this format:
 ```
@@ -60,12 +62,28 @@ When you need to specify the type of a value, follow this format:
 }
 ```
 
-The `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
+The configurable `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
 
-The `BSON_TYPE` is the Bson type that directly corresponds to the `enum` names/constant of the [`BsonType` class](https://mongodb.github.io/mongo-java-driver/3.11/javadoc/org/bson/BsonType.html), which is part of the MongoDB Java driver.
+The `BSON_TYPE` is the Bson type that directly corresponds to the `enum` names/constants of the [`BsonType` class](https://mongodb.github.io/mongo-java-driver/3.11/javadoc/org/bson/BsonType.html), which is part of the MongoDB Java driver.
 
+## Assertion JSON format
 
+The JSON file used for assertion is (or can be) essentially in the exact same format as the seeding JSON format.
 
+However, to facilite greater flexibility in comparison between the actual dataset and the expected dataset, there is extra syntax.
+
+For example:
+
+```json
+"fieldName": {
+  "$$BSON_TYPE": value,
+  "comparator": "="
+ }
+```
+
+The configurable `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
+
+The `BSON_TYPE` is the Bson type that directly corresponds to the `enum` names/constants of the [`BsonType` class](https://mongodb.github.io/mongo-java-driver/3.11/javadoc/org/bson/BsonType.html), which is part of the MongoDB Java driver.
 
 ## Supported Bson types
 
