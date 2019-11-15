@@ -1528,6 +1528,11 @@ public class MongoUnitUtil {
   private static Comparable expectedToComparable(Object expectedValue, String bsonType)
       throws MongoUnitException {
 
+    // If expected value is null, always return 'null'
+    if (expectedValue == null) {
+      return null;
+    }
+
     try {
 
       // If bsonType isn't specified, just need to cast to Comparable

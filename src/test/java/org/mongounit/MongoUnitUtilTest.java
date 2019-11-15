@@ -82,6 +82,18 @@ class MongoUnitUtilTest {
     assertFalse(assertMatchesMongoUnitValue(mongoUnitValue, 1, "$$").isMatch(), "null != 1");
     assertTrue(assertMatchesMongoUnitValue(mongoUnitValue, null, "$$").isMatch(), "null == null");
 
+    // null for expected value (with BSON type) when actual is and is not null
+    mongoUnitValue.put(COMPARATOR_FIELD_NAME, "=");
+    mongoUnitValue.remove("$$");
+    mongoUnitValue.put("$$DATE_TIME", null);
+    assertTrue(
+        assertMatchesMongoUnitValue(mongoUnitValue, null, "$$").isMatch(),
+        "DATE_TIME null == null");
+    mongoUnitValue.put(COMPARATOR_FIELD_NAME, "!=");
+    assertTrue(
+        assertMatchesMongoUnitValue(mongoUnitValue, "2019-10-28T16:26:10.247Z", "$$").isMatch(),
+        "DATE_TIME null != 2019-10-28T16:26:10.247Z");
+
     // null for actual value
     mongoUnitValue.put(COMPARATOR_FIELD_NAME, "=");
     mongoUnitValue.put("$$", 1);
@@ -205,7 +217,7 @@ class MongoUnitUtilTest {
   @DisplayName("Assertion of non-list, non-map generic expected value.")
   void testAssertMatchesValueSimpleExpected() {
 
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$", null, null);
 
     // numbers
     assertTrue(assertMatchesValue(1, 1, props).isMatch(), "1 = 1");
