@@ -8,6 +8,7 @@
  */
 package org.mongounit.config;
 
+import static java.time.ZoneId.SHORT_IDS;
 import static org.mongounit.config.MongoUnitProperties.BASE_URI_KEEP_AS_IS_PROP_NAME;
 import static org.mongounit.config.MongoUnitProperties.BASE_URI_PROP_NAME;
 import static org.mongounit.config.MongoUnitProperties.DROP_DATABASE_PROP_NAME;
@@ -102,7 +103,7 @@ public class MongoUnitConfigurationUtil {
     // Create valid time zone based on provided 'timeZoneId'
     ZoneId timeZone;
     try {
-      timeZone = ZoneId.of(timeZoneId);
+      timeZone = ZoneId.of(timeZoneId, SHORT_IDS);
     } catch (Exception exception) {
       throw new MongoUnitException(
           "Configured Time Zone ID of '" + timeZoneId + "' is not valid.",
