@@ -15,7 +15,7 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 <dependency>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <scope>test</scope>
 </dependency>
 ```

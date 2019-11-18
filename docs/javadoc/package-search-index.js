@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"org.mongounit"},{"l":"org.mongounit.config"},{"l":"org.mongounit.model"}]
