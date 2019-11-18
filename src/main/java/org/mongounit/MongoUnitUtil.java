@@ -202,7 +202,7 @@ public class MongoUnitUtil {
 
       return jsonMapper.readValue(
           jsonMongoUnitCollections,
-          new TypeReference<>() {
+          new TypeReference<List<MongoUnitCollection>>() {
           });
     } catch (IOException exception) {
 
@@ -948,7 +948,7 @@ public class MongoUnitUtil {
         .stream()
         .filter(key -> key.startsWith(fieldNameIndicator))
         .findAny()
-        .orElseThrow(() -> {
+        .<MongoUnitException>orElseThrow(() -> {
           String message = "Error: the following document was expected to have special"
               + " MongoUnit value format but didn't: '" + mongoUnitValueDocument + "'.";
           throw new MongoUnitException(message);
@@ -1897,7 +1897,7 @@ public class MongoUnitUtil {
         case CLASSPATH_ROOT:
 
           Path path = Paths.get(MongoUnitUtil.class.getResource(location).toURI());
-          resourceContents = Files.readString(path);
+          resourceContents = new String(Files.readAllBytes(path));
 
           break;
 
@@ -1915,13 +1915,13 @@ public class MongoUnitUtil {
           location = testClassName + location;
 
           path = Paths.get(relativePackageClass.getResource(location).toURI());
-          resourceContents = Files.readString(path);
+          resourceContents = new String(Files.readAllBytes(path));
 
           break;
 
         case ABSOLUTE:
 
-          resourceContents = Files.readString(Paths.get(location));
+          resourceContents = new String(Files.readAllBytes(Paths.get(location)));
 
           break;
 
@@ -1956,7 +1956,7 @@ public class MongoUnitUtil {
       return "null";
     }
 
-    return "/" + packagedClass.getPackageName().replace(".", "/");
+    return "/" + packagedClass.getPackage().getName().replace(".", "/");
   }
 
   /**
