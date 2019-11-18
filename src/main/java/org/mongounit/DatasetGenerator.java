@@ -108,7 +108,7 @@ public class DatasetGenerator {
           mongoDatabase,
           mongoUnitProperties,
           arguments.getPreserveBsonTypes(),
-          arguments.getCollectionNames().toArray(String[]::new));
+          arguments.getCollectionNames().toArray(new String[0]));
     } catch (IllegalArgumentException exception) {
 
       System.out.println("**** ERROR: " + exception.getMessage());
@@ -363,8 +363,8 @@ public class DatasetGenerator {
     String[] argumentValueArray = commaSeparateArgumentValue.split(",");
     for (String argumentValue : argumentValueArray) {
 
-      if (!argumentValue.strip().isEmpty()) {
-        argumentValueList.add(argumentValue.strip());
+      if (!argumentValue.trim().isEmpty()) {
+        argumentValueList.add(argumentValue.trim());
       }
     }
 
