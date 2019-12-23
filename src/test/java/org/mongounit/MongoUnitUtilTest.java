@@ -23,7 +23,7 @@ import static org.mongounit.MongoUnitUtil.compare;
 import static org.mongounit.MongoUnitUtil.extractMongoUnitDatasets;
 import static org.mongounit.MongoUnitUtil.extractMongoUnitValue;
 import static org.mongounit.MongoUnitUtil.extractTestClassName;
-import static org.mongounit.MongoUnitUtil.generateMongoUnitValueDocument;
+import static org.mongounit.MongoUnitUtil.generateMongoUnitValue;
 import static org.mongounit.MongoUnitUtil.getFileLocations;
 import static org.mongounit.MongoUnitUtil.getTestClassNamePath;
 import static org.mongounit.MongoUnitUtil.retrieveDatasetFromLocations;
@@ -40,7 +40,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mockito.Mockito;
-import org.mongounit.config.MongoUnitProperties;
+import org.mongounit.config.MongoUnitConfig;
 import org.mongounit.model.MongoUnitCollection;
 import org.mongounit.model.MongoUnitDatasets;
 import org.mongounit.model.MongoUnitValue;
@@ -138,7 +138,7 @@ class MongoUnitUtilTest {
   @DisplayName("Assertion of regular (not MongoUnit) expected map value.")
   void testAssertMatchesValueMapExpected() {
 
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$mongounit$$", null, null);
 
     // expected is map, actual is not
     Map<String, Object> expectedValue = new HashMap<>();
@@ -188,7 +188,7 @@ class MongoUnitUtilTest {
   @DisplayName("Assertion of expected list value.")
   void testAssertMatchesValueListExpected() {
 
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$mongounit$$", null, null);
 
     // expected is list, actual is not
     List<String> expectedValue = Arrays.asList("Hello", "World");
@@ -217,7 +217,7 @@ class MongoUnitUtilTest {
   @DisplayName("Assertion of non-list, non-map generic expected value.")
   void testAssertMatchesValueSimpleExpected() {
 
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$", null, null);
 
     // numbers
     assertTrue(assertMatchesValue(1, 1, props).isMatch(), "1 = 1");
@@ -261,7 +261,7 @@ class MongoUnitUtilTest {
   @Test
   @DisplayName("Assert documents match.")
   void testAssertMatchesDocuments() {
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$mongounit$$", null, null);
 
     Map<String, Object> expectedDocument = new HashMap<>();
     expectedDocument.put("name", "TestName");
@@ -312,7 +312,7 @@ class MongoUnitUtilTest {
   @Test
   @DisplayName("Assert collection match.")
   void testAssertMatchesCollection() {
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$mongounit$$", null, null);
 
     List<Map<String, Object>> expectedDocuments = new ArrayList<>();
     Map<String, Object> expectedDocument = new HashMap<>();
@@ -418,7 +418,7 @@ class MongoUnitUtilTest {
   @Test
   @DisplayName("Assert collections match.")
   void testAssertMatchesCollections() {
-    MongoUnitProperties props = new MongoUnitProperties(null, null, "$$mongounit$$", null, null);
+    MongoUnitConfig props = new MongoUnitConfig(null, null, "$$mongounit$$", null, null);
 
     List<Map<String, Object>> expectedDocuments = new ArrayList<>();
     Map<String, Object> expectedDocument = new HashMap<>();
@@ -757,19 +757,19 @@ class MongoUnitUtilTest {
   void testGenerateMongoUnitValueDocument() {
 
     String formattedDateStr = "2019-10-28T15:39:24.326Z";
-    Map<String, Object> value = generateMongoUnitValueDocument("$$", "DATE_TIME", formattedDateStr);
+    Map<String, Object> value = generateMongoUnitValue("$$", "DATE_TIME", formattedDateStr);
 
     assertEquals(
         formattedDateStr,
         value.get("$$DATE_TIME"),
         "Map should have date value under correct key.");
 
-    value = generateMongoUnitValueDocument("$$", "NULL", null);
+    value = generateMongoUnitValue("$$", "NULL", null);
     assertNull(value.get("$$NULL"), "Map should have null value under correct key.");
 
     BsonObjectId id = new BsonObjectId();
     String hexId = id.getValue().toHexString();
-    value = generateMongoUnitValueDocument("$$", "OBJECT_ID", hexId);
+    value = generateMongoUnitValue("$$", "OBJECT_ID", hexId);
     assertEquals(
         hexId,
         value.get("$$OBJECT_ID"),

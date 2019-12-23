@@ -47,13 +47,13 @@ import org.bson.BsonRegularExpression;
 import org.bson.BsonString;
 import org.bson.BsonSymbol;
 import org.bson.BsonTimestamp;
+import org.bson.BsonType;
 import org.bson.BsonUndefined;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.mongounit.config.MongoUnitProperties;
 import org.mongounit.model.AssertionResult;
 import org.mongounit.model.MongoUnitAnnotations;
 import org.mongounit.model.MongoUnitCollection;
@@ -65,108 +65,23 @@ import org.slf4j.LoggerFactory;
 public class MongoUnitUtil {
 
   /**
-   * Logger for this configuration class.
-   */
-  private static Logger log = LoggerFactory.getLogger(MongoUnitUtil.class);
-
-  /**
    * Field name to use when extracting the comparator field out of a special document which
    * represents a MongoUnit value.
    */
   public static final String COMPARATOR_FIELD_NAME = "comparator";
-
   /**
    * Format in which a date is expected to appear in the seed or expected JSON documents.
    */
   private static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-
   /**
-   * Returns a list of {@link MongoUnitCollection}s that represents the dataset stored in the
-   * provided 'mongoDatabase'.
-   *
-   * @param mongoDatabase Instance of the MongoDB database with collections based on which to base
-   * the returned dataset.
-   * @param mongoUnitProperties Collection of properties framework was configured with. If the
-   * provided 'preserveBsonTypes' is null, this argument may also be 'null' and is ignored.
-   * @param preserveBsonTypes List of string representation of {@link org.bson.BsonType} enum names
-   * that should be preserved when creating documents. This **must** be 'null' when this method is
-   * used for assertions instead of to output JSON through {@link DatasetGenerator}.
-   * @param collectionNames Optional list of collection names to which to restrict data extraction
-   * to.
-   * @return List of {@link MongoUnitCollection}s that represents the dataset stored in the provided
-   * 'mongoDatabase'. If 'collectionNames' are specified, the extracted dataset will be limited to
-   * those collections only.
-   * @throws IllegalArgumentException If at least one of the optionally specified 'collectionNames'
-   * does not exist in the provided 'mongoDatabase'.
+   * Date formatter object which formats the date in the standard MongoDb date format.
    */
-  public static List<MongoUnitCollection> fromDatabase(
-      MongoDatabase mongoDatabase,
-      MongoUnitProperties mongoUnitProperties,
-      List<String> preserveBsonTypes,
-      String... collectionNames) throws IllegalArgumentException {
-
-    List<MongoUnitCollection> mongoUnitCollections = new ArrayList<>();
-    List<String> collectionNamesToExtract = getCollectionNamesToUse(mongoDatabase, collectionNames);
-
-    // Extract documents from each collection
-    for (String collectionName : collectionNamesToExtract) {
-
-      MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
-
-      // Extract mongo unit documents (comprised of name/value maps) from single DB collection
-      List<Map<String, Object>> mongoUnitDocuments =
-          getMongoUnitDocuments(collection, mongoUnitProperties, preserveBsonTypes);
-
-      // Create MongoUnitCollection and add it to the list
-      MongoUnitCollection mongoUnitCollection = MongoUnitCollection.builder()
-          .collectionName(collectionName)
-          .documents(mongoUnitDocuments)
-          .build();
-      mongoUnitCollections.add(mongoUnitCollection);
-    }
-
-    return mongoUnitCollections;
-  }
-
+  private static final SimpleDateFormat STANDARD_MONGO_DATE_FORMAT =
+      new SimpleDateFormat(DATE_STRING_FORMAT);
   /**
-   * Seeds an existing database provided by 'mongoDatabase' with dataset represented in the {@link
-   * MongoUnitCollection}s schema by the provided 'jsonMongoUnitCollections'.
-   *
-   * @param mongoUnitCollections List of {@link MongoUnitCollection}s to persist to seed the
-   * database with.
-   * @param mongoDatabase MongoDB instance to seed with the provided data.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
-   * @throws MongoUnitException If anything goes wrong with interpreting the provided
-   * 'mongoUnitCollections' in order to seed the database.
+   * Logger for this configuration class.
    */
-  public static void toDatabase(
-      List<MongoUnitCollection> mongoUnitCollections,
-      MongoDatabase mongoDatabase,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
-
-    // Bulk insert bson documents for each collection
-    for (MongoUnitCollection mongoUnitCollection : mongoUnitCollections) {
-
-      String collectionName = mongoUnitCollection.getCollectionName();
-
-      // Convert mongo unit collection to BSON documents
-      List<Document> collectionDocs;
-      try {
-
-        collectionDocs = toBsonDocuments(mongoUnitCollection.getDocuments(), mongoUnitProperties);
-
-      } catch (MongoUnitException mongoUnitException) {
-
-        // Add tracing to the exception message
-        String message = "Collection '" + collectionName + "': ";
-        throw new MongoUnitException(message + mongoUnitException.getMessage(), mongoUnitException);
-      }
-
-      // Bulk insert collection docs into the collection
-      MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(collectionName);
-      mongoCollection.insertMany(collectionDocs);
-    }
-  }
+  private static Logger log = LoggerFactory.getLogger(MongoUnitUtil.class);
 
   /**
    * Finds and drops all of the collections in the provided 'mongoDatabase'.
@@ -198,6 +113,9 @@ public class MongoUnitUtil {
 
     try {
 
+      // TODO: Might have to write custom deserializer to fit it back into MongoUnitValue for all
+      //  the cases since the JSON format does not break MongoUnitValue into 3 separate fields.
+
       ObjectMapper jsonMapper = new ObjectMapper();
 
       return jsonMapper.readValue(
@@ -213,18 +131,35 @@ public class MongoUnitUtil {
   }
 
   /**
+   * @param mongoDatabase Instance of the MongoDB database to extract all existing collection names
+   * from.
+   * @return List of existing collections in the provided 'mongoDatabase'.
+   */
+  private static List<String> getCollectionNames(MongoDatabase mongoDatabase) {
+
+    List<String> collectionNames = new ArrayList<>();
+
+    // Retrieve collection names from db
+    for (String collectionName : mongoDatabase.listCollectionNames()) {
+      collectionNames.add(collectionName);
+    }
+
+    return collectionNames;
+  }
+
+  /**
    * @param mongoDatabase Database which collection names will be extracted from.
    * @param collectionNames Possibly empty client-provided names of the collections to use instead
    * of default to all the collection names from the database.
    * @return List of collection names which are either all of the collection names in the provided
    * 'mongoDatabase' or, if the provided 'collectionNames' is not empty, names of the collections
    * contained in the provided 'collectionNames'.
-   * @throws IllegalArgumentException If at least one of the collection names in the provided
+   * @throws MongoUnitException If at least one of the collection names in the provided
    * 'collectionNames' does not exist in the provided 'mongoDatabase'.
    */
   private static List<String> getCollectionNamesToUse(
       MongoDatabase mongoDatabase,
-      String[] collectionNames) throws IllegalArgumentException {
+      String[] collectionNames) throws MongoUnitException {
 
     // Get names of all collections in db
     List<String> databaseCollectionNames = getCollectionNames(mongoDatabase);
@@ -247,7 +182,7 @@ public class MongoUnitUtil {
           String message = "Specified collection '" + collectionName + "' does not exist in the"
               + " " + mongoDatabase.getName() + " database.";
           log.error(message);
-          throw new IllegalArgumentException(message);
+          throw new MongoUnitException(message);
         }
       }
     }
@@ -255,39 +190,55 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param mongoDatabase Instance of the MongoDB database to extract all existing collection names
-   * from.
-   * @return List of existing collections in the provided 'mongoDatabase'.
+   * Returns a list of {@link MongoUnitCollection}s that represents the dataset stored in the
+   * provided 'mongoDatabase'.
+   *
+   * @param mongoDatabase Instance of the MongoDB database with collections based on which to base
+   * the returned dataset.
+   * @param collectionNames Optional list of collection names to which to restrict data extraction
+   * to.
+   * @return List of {@link MongoUnitCollection}s that represents the dataset stored in the provided
+   * 'mongoDatabase'. If 'collectionNames' are specified, the extracted dataset will be limited to
+   * those collections only.
+   * @throws MongoUnitException If at least one of the optionally specified 'collectionNames' does
+   * not exist in the provided 'mongoDatabase'.
    */
-  private static List<String> getCollectionNames(MongoDatabase mongoDatabase) {
+  public static List<MongoUnitCollection> toMongoUnitCollections(
+      MongoDatabase mongoDatabase,
+      String... collectionNames) throws MongoUnitException {
 
-    List<String> collectionNames = new ArrayList<>();
+    List<MongoUnitCollection> mongoUnitCollections = new ArrayList<>();
+    List<String> collectionNamesToExtract = getCollectionNamesToUse(mongoDatabase, collectionNames);
 
-    // Retrieve collection names from db
-    for (String collectionName : mongoDatabase.listCollectionNames()) {
-      collectionNames.add(collectionName);
+    // Extract documents from each collection
+    for (String collectionName : collectionNamesToExtract) {
+
+      MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+
+      // Extract mongo unit documents (comprised of name/value maps) from single DB collection
+      List<Map<String, MongoUnitValue>> mongoUnitDocuments = toMongoUnitDocuments(collection);
+
+      // Create MongoUnitCollection and add it to the list
+      MongoUnitCollection mongoUnitCollection = MongoUnitCollection.builder()
+          .collectionName(collectionName)
+          .documents(mongoUnitDocuments)
+          .build();
+      mongoUnitCollections.add(mongoUnitCollection);
     }
 
-    return collectionNames;
+    return mongoUnitCollections;
   }
 
   /**
    * @param mongoCollection Mongo collection to extract all documents as a list of maps of field
    * name/value pairs.
-   * @param mongoUnitProperties Collection of properties framework was configured with. If the
-   * provided 'preserveBsonTypes' is null, this argument may also be 'null' and is ignored.
-   * @param preserveBsonTypes List of string representation of {@link org.bson.BsonType} enum names
-   * that should be preserved when creating documents. This **must** be 'null' when this method is
-   * used for assertions instead of to output JSON through {@link DatasetGenerator}.
    * @return List of maps of field name/value pairs of all the documents in the provided
    * 'mongoCollection', where each map represents a single document.
    */
-  private static List<Map<String, Object>> getMongoUnitDocuments(
-      MongoCollection<Document> mongoCollection,
-      MongoUnitProperties mongoUnitProperties,
-      List<String> preserveBsonTypes) {
+  private static List<Map<String, MongoUnitValue>> toMongoUnitDocuments(
+      MongoCollection<Document> mongoCollection) {
 
-    List<Map<String, Object>> mongoUnitDocuments = new ArrayList<>();
+    List<Map<String, MongoUnitValue>> mongoUnitDocuments = new ArrayList<>();
 
     // Loop over each document in 'mongoCollection'
     FindIterable<Document> mongoDocuments = mongoCollection.find();
@@ -298,8 +249,7 @@ public class MongoUnitUtil {
           .toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
 
       // Extract all mongo unit fields from this document and add them to document list as a map
-      Map<String, Object> mongoUnitFields =
-          getDocument(bsonDocument, mongoUnitProperties, preserveBsonTypes);
+      Map<String, MongoUnitValue> mongoUnitFields = toMongoUnitDocument(bsonDocument);
       mongoUnitDocuments.add(mongoUnitFields);
     }
 
@@ -308,19 +258,11 @@ public class MongoUnitUtil {
 
   /**
    * @param bsonDocument {@link BsonDocument} to extract all fields from.
-   * @param mongoUnitProperties Collection of properties framework was configured with. If the
-   * provided 'preserveBsonTypes' is null, this argument may also be 'null' and is ignored.
-   * @param preserveBsonTypes List of string representation of {@link org.bson.BsonType} enum names
-   * that should be preserved when creating documents. This **must** be 'null' when this method is
-   * used for assertions instead of to output JSON through {@link DatasetGenerator}.
    * @return Map of field/value pairs that represent all the fields in the provided 'bsonDocument'.
    */
-  private static Map<String, Object> getDocument(
-      BsonDocument bsonDocument,
-      MongoUnitProperties mongoUnitProperties,
-      List<String> preserveBsonTypes) {
+  private static Map<String, MongoUnitValue> toMongoUnitDocument(BsonDocument bsonDocument) {
 
-    Map<String, Object> document = new HashMap<>();
+    Map<String, MongoUnitValue> document = new HashMap<>();
 
     // Loop over all document fields
     Set<String> fieldKeys = bsonDocument.keySet();
@@ -328,10 +270,10 @@ public class MongoUnitUtil {
 
       // Get value for field key
       BsonValue bsonValue = bsonDocument.get(fieldKey);
-      Object mongoUnitField = getFieldValue(bsonValue, mongoUnitProperties, preserveBsonTypes);
+      MongoUnitValue mongoUnitFieldValue = toMongoUnitValue(bsonValue);
 
       // Store field key and its value in the map
-      document.put(fieldKey, mongoUnitField);
+      document.put(fieldKey, mongoUnitFieldValue);
     }
 
     return document;
@@ -339,154 +281,66 @@ public class MongoUnitUtil {
 
   /**
    * @param bsonValue {@link BsonValue} to extract value from.
-   * @param mongoUnitProperties Collection of properties framework was configured with. If the
-   * provided 'preserveBsonTypes' is null, this argument may also be 'null' and is ignored.
-   * @param preserveBsonTypes List of string representation of {@link org.bson.BsonType} enum names
-   * that should be preserved when creating documents. This **must** be 'null' when this method is
-   * used for assertions instead of to output JSON through {@link DatasetGenerator}.
-   * @return Value that can be used for comparisons, i.e., simplified from its BsonType to simpler
-   * types.
+   * @return Instance of {@link MongoUnitValue} that holds its non-MongoDB driver Java-typed value
+   * as well as its {@link BsonType}.
    */
-  private static Object getFieldValue(
-      BsonValue bsonValue,
-      MongoUnitProperties mongoUnitProperties,
-      List<String> preserveBsonTypes) {
-
-    // Convert list of types to preserve to map for faster look up
-    Map<String, String> preserveBsonTypesMap = preserveBsonTypes == null ?
-        new HashMap<>() :
-        preserveBsonTypes.stream().collect(Collectors.toMap(e -> e, e -> e));
-
-    // Retrieve field name indicator if mongoUnitProperties is not null; otherwise set it to null
-    String fieldNameIndicator = mongoUnitProperties == null ?
-        null :
-        mongoUnitProperties.getMongoUnitValueFieldNameIndicator();
+  private static MongoUnitValue toMongoUnitValue(BsonValue bsonValue) {
 
     // Extract value based on the BsonType
-    switch (bsonValue.getBsonType()) {
+    BsonType bsonType = bsonValue.getBsonType();
+    Object value;
+    switch (bsonType) {
 
       case ARRAY:
-        // Preserve ARRAY BSON type?
-        if (preserveBsonTypesMap.containsKey("ARRAY")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "ARRAY",
-              getArrayValues(bsonValue.asArray(), mongoUnitProperties, preserveBsonTypes));
-        }
 
-        return getArrayValues(bsonValue.asArray(), mongoUnitProperties, preserveBsonTypes);
+        value = toMongoUnitArrayValues(bsonValue.asArray());
+        break;
 
       case DOCUMENT:
-        // Preserve DOCUMENT BSON type?
-        if (preserveBsonTypesMap.containsKey("DOCUMENT")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "DOCUMENT",
-              getDocument(bsonValue.asDocument(), mongoUnitProperties, preserveBsonTypes));
-        }
 
-        return getDocument(bsonValue.asDocument(), mongoUnitProperties, preserveBsonTypes);
+        value = toMongoUnitDocument(bsonValue.asDocument());
+        break;
 
       case DOUBLE:
-        // Preserve DOUBLE BSON type?
-        if (preserveBsonTypesMap.containsKey("DOUBLE")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "DOUBLE",
-              bsonValue.asDouble().getValue());
-        }
 
-        return bsonValue.asDouble().getValue();
+        value = bsonValue.asDouble().getValue();
+        break;
 
       case STRING:
-        // Preserve STRING BSON type?
-        if (preserveBsonTypesMap.containsKey("STRING")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "STRING",
-              bsonValue.asString().getValue());
-        }
 
-        return bsonValue.asString().getValue();
+        value = bsonValue.asString().getValue();
+        break;
 
       case BINARY:
-        // Preserve BINARY BSON type?
-        if (preserveBsonTypesMap.containsKey("BINARY")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "BINARY",
-              Base64.getEncoder().encodeToString(bsonValue.asBinary().getData()));
-        }
 
-        // Store using Base64 encoding
-        return Base64.getEncoder().encodeToString(bsonValue.asBinary().getData());
+        value = Base64.getEncoder().encodeToString(bsonValue.asBinary().getData());
+        break;
 
       case OBJECT_ID:
-        // Preserve OBJECT_ID BSON type?
-        if (preserveBsonTypesMap.containsKey("OBJECT_ID")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "OBJECT_ID",
-              bsonValue.asObjectId().getValue().toHexString());
-        }
 
-        return bsonValue.asObjectId().getValue().toHexString();
+        value = bsonValue.asObjectId().getValue().toHexString();
+        break;
 
       case BOOLEAN:
-        // Preserve BOOLEAN BSON type?
-        if (preserveBsonTypesMap.containsKey("BOOLEAN")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "BOOLEAN",
-              bsonValue.asBoolean().getValue());
-        }
 
-        return bsonValue.asBoolean().getValue();
+        value = bsonValue.asBoolean().getValue();
+        break;
 
       case DATE_TIME:
-        // Preserve DATE_TIME BSON type?
-        if (preserveBsonTypesMap.containsKey("DATE_TIME")) {
 
-          SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-          String dateValue = format.format(new Date(bsonValue.asDateTime().getValue()));
-
-          return generateMongoUnitValueDocument(fieldNameIndicator, "DATE_TIME", dateValue);
-        }
-
-        return bsonValue.asDateTime().getValue();
+        value = bsonValue.asDateTime().getValue();
+        break;
 
       case NULL:
-        // Preserve NULL BSON type?
-        if (preserveBsonTypesMap.containsKey("NULL")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "NULL",
-              null);
-        }
-
-        return null;
-
       case UNDEFINED:
-        // Preserve UNDEFINED BSON type?
-        if (preserveBsonTypesMap.containsKey("UNDEFINED")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "UNDEFINED",
-              null);
-        }
 
-        return null;
+        value = null;
+        break;
 
       case REGULAR_EXPRESSION:
-        // Preserve REGULAR_EXPRESSION BSON type?
-        if (preserveBsonTypesMap.containsKey("REGULAR_EXPRESSION")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "REGULAR_EXPRESSION",
-              bsonValue.asRegularExpression().getPattern());
-        }
 
-        return bsonValue.asRegularExpression().getPattern();
+        value = bsonValue.asRegularExpression().getPattern();
+        break;
 
       case DB_POINTER:
         String namespace = bsonValue.asDBPointer().getNamespace();
@@ -496,144 +350,71 @@ public class MongoUnitUtil {
         dbPointerValueMap.put("namespace", namespace);
         dbPointerValueMap.put("objectId", objectId);
 
-        // Preserve DB_POINTER BSON type?
-        if (preserveBsonTypesMap.containsKey("DB_POINTER")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "DB_POINTER",
-              dbPointerValueMap);
-        }
-
-        return dbPointerValueMap;
+        value = dbPointerValueMap;
+        break;
 
       case JAVASCRIPT:
-        // Preserve JAVASCRIPT BSON type?
-        if (preserveBsonTypesMap.containsKey("JAVASCRIPT")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "JAVASCRIPT",
-              bsonValue.asJavaScript().getCode());
-        }
 
-        return bsonValue.asJavaScript().getCode();
+        value = bsonValue.asJavaScript().getCode();
+        break;
 
       case SYMBOL:
-        // Preserve SYMBOL BSON type?
-        if (preserveBsonTypesMap.containsKey("SYMBOL")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "SYMBOL",
-              bsonValue.asSymbol().getSymbol());
-        }
 
-        return bsonValue.asSymbol().getSymbol();
+        value = bsonValue.asSymbol().getSymbol();
+        break;
 
       case JAVASCRIPT_WITH_SCOPE:
-        // Preserve JAVASCRIPT_WITH_SCOPE BSON type?
-        if (preserveBsonTypesMap.containsKey("JAVASCRIPT_WITH_SCOPE")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "JAVASCRIPT_WITH_SCOPE",
-              bsonValue.asJavaScriptWithScope().getCode());
-        }
 
-        return bsonValue.asJavaScriptWithScope().getCode();
+        value = bsonValue.asJavaScriptWithScope().getCode();
+        break;
 
       case INT32:
-        // Preserve INT32 BSON type?
-        if (preserveBsonTypesMap.containsKey("INT32")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "INT32",
-              bsonValue.asInt32().getValue());
-        }
 
-        return bsonValue.asInt32().getValue();
+        value = bsonValue.asInt32().getValue();
+        break;
 
       case TIMESTAMP:
-        // Preserve TIMESTAMP BSON type?
-        if (preserveBsonTypesMap.containsKey("TIMESTAMP")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "TIMESTAMP",
-              bsonValue.asTimestamp().getValue());
-        }
 
-        return bsonValue.asTimestamp().getValue();
+        value = bsonValue.asTimestamp().getValue();
+        break;
 
       case INT64:
-        // Preserve INT64 BSON type?
-        if (preserveBsonTypesMap.containsKey("INT64")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "INT64",
-              bsonValue.asInt64().getValue());
-        }
 
-        return bsonValue.asInt64().getValue();
+        value = bsonValue.asInt64().getValue();
+        break;
 
       case DECIMAL128:
-        // Preserve DECIMAL128 BSON type?
-        if (preserveBsonTypesMap.containsKey("DECIMAL128")) {
-          return generateMongoUnitValueDocument(
-              fieldNameIndicator,
-              "DECIMAL128",
-              bsonValue.asDecimal128().decimal128Value().bigDecimalValue());
-        }
 
-        return bsonValue.asDecimal128().decimal128Value().bigDecimalValue();
+        value = bsonValue.asDecimal128().decimal128Value().bigDecimalValue();
+        break;
 
       // END_OF_DOCUMENT, MIN_KEY, MAX_KEY
       default:
-        String message = "BSON type " + bsonValue.getBsonType() + " is not currently supported by"
-            + " the MongoUnit framework.";
+        String message = "BSON type " + bsonType + " is not currently supported by the MongoUnit"
+            + " framework.";
         log.error(message);
         throw new MongoUnitException(message);
     }
-  }
 
-  /**
-   * @param fieldNameIndicator Field name indicator that is configured to be a trigger to recognize
-   * that the provided 'mongoUnitValueDocument' is using a special MongoUnit schema format.
-   * @param bsonType String name of a BSON TYPE corresponding to the enum name of {@link
-   * org.bson.BsonType}.
-   * @param value The value to set for the 'value' part of the MongoUnit value document.
-   * @return A special MongoUnit value document with a single name/value pair where the name is the
-   * provided 'fieldNameIndicator' concatenated with the provided 'bsonType' and the value is the
-   * provided 'value'.
-   */
-  public static Map<String, Object> generateMongoUnitValueDocument(
-      String fieldNameIndicator,
-      String bsonType,
-      Object value) {
-
-    Map<String, Object> mongoUnitValueDocument = new HashMap<>();
-    String key = fieldNameIndicator + bsonType;
-    mongoUnitValueDocument.put(key, value);
-
-    return mongoUnitValueDocument;
+    return MongoUnitValue.builder()
+        .bsonType(bsonType)
+        .value(value)
+        .build();
   }
 
   /**
    * @param bsonArrayValue {@link BsonArray} which contains values to extract.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
-   * @param preserveBsonTypes List of string representation of {@link org.bson.BsonType} enum names
-   * that should be preserved when creating documents. This **must** be 'null' when this method is
-   * used for assertions instead of to output JSON through {@link DatasetGenerator}.
-   * @return List of values contained in the provided 'bsonArrayValue'.
+   * @return List of {@link MongoUnitValue}s contained in the provided 'bsonArrayValue'.
    */
-  private static List<Object> getArrayValues(
-      BsonArray bsonArrayValue,
-      MongoUnitProperties mongoUnitProperties,
-      List<String> preserveBsonTypes) {
+  private static List<MongoUnitValue> toMongoUnitArrayValues(BsonArray bsonArrayValue) {
 
-    List<Object> arrayValues = new ArrayList<>();
+    List<MongoUnitValue> arrayValues = new ArrayList<>();
 
     // Loop over array values and extract each one
     for (BsonValue bsonValue : bsonArrayValue.getValues()) {
 
       // Extract value and add it to list of array values
-      Object value = getFieldValue(bsonValue, mongoUnitProperties, preserveBsonTypes);
+      MongoUnitValue value = toMongoUnitValue(bsonValue);
       arrayValues.add(value);
     }
 
@@ -641,29 +422,65 @@ public class MongoUnitUtil {
   }
 
   /**
+   * Seeds an existing database provided by 'mongoDatabase' with dataset represented in the {@link
+   * MongoUnitCollection}s schema by the provided 'jsonMongoUnitCollections'.
+   *
+   * @param mongoUnitCollections List of {@link MongoUnitCollection}s to persist to seed the
+   * database with.
+   * @param mongoDatabase MongoDB instance to seed with the provided data.
+   * @throws MongoUnitException If anything goes wrong with interpreting the provided
+   * 'mongoUnitCollections' in order to seed the database.
+   */
+  public static void toDatabase(
+      List<MongoUnitCollection> mongoUnitCollections,
+      MongoDatabase mongoDatabase) throws MongoUnitException {
+
+    // Bulk insert bson documents for each collection
+    for (MongoUnitCollection mongoUnitCollection : mongoUnitCollections) {
+
+      String collectionName = mongoUnitCollection.getCollectionName();
+
+      // Convert mongo unit collection to BSON documents
+      List<Document> collectionDocs;
+      try {
+
+        collectionDocs = toBsonDocuments(mongoUnitCollection.getDocuments());
+
+      } catch (MongoUnitException mongoUnitException) {
+
+        // Add tracing to the exception message
+        String message = "Collection '" + collectionName + "': ";
+        throw new MongoUnitException(message + mongoUnitException.getMessage(), mongoUnitException);
+      }
+
+      // Bulk insert collection docs into the collection
+      MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(collectionName);
+      mongoCollection.insertMany(collectionDocs);
+    }
+  }
+
+  /**
    * @param mongoUnitDocuments List of maps of field name/value pairs of all the documents in this
    * collection, where each map represents a single document.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
    * @return List of MongoDB BSON {@link Document} objects ready to insert into database
    * @throws MongoUnitException If anything goes wrong with translating the provided
    * 'mongoUnitDocuments'.
    */
   private static List<Document> toBsonDocuments(
-      List<Map<String, Object>> mongoUnitDocuments,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+      List<Map<String, MongoUnitValue>> mongoUnitDocuments) throws MongoUnitException {
 
     List<Document> bsonDocuments = new ArrayList<>();
 
     // Loop over all mongo unit documents
     for (int i = 0; i < mongoUnitDocuments.size(); i++) {
 
-      Map<String, Object> document = mongoUnitDocuments.get(i);
+      Map<String, MongoUnitValue> document = mongoUnitDocuments.get(i);
 
       // Convert each mongo unit document to BSON document; add to collection of documents
       Document bsonDocument;
       try {
 
-        bsonDocument = toBsonDocument(document, mongoUnitProperties);
+        bsonDocument = toBsonDocument(document);
 
       } catch (MongoUnitException mongoUnitException) {
 
@@ -680,15 +497,13 @@ public class MongoUnitUtil {
 
   /**
    * @param mongoUnitDocument Map of field name/value pairs of a single mongo unit document.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
    * @return MongoDB BSON {@link Document} representation of the provided 'mongoUnitDocument', ready
    * to be inserted into the database.
    * @throws MongoUnitException If anything goes wrong with translating the provided
    * 'mongoUnitDocument'.
    */
-  private static Document toBsonDocument(
-      Map<String, Object> mongoUnitDocument,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+  private static Document toBsonDocument(Map<String, MongoUnitValue> mongoUnitDocument)
+      throws MongoUnitException {
 
     Document bsonDocument = new Document();
 
@@ -696,14 +511,14 @@ public class MongoUnitUtil {
     Set<String> fieldNames = mongoUnitDocument.keySet();
     for (String fieldName : fieldNames) {
 
-      // Get the value
-      Object mongoUnitFieldValue = mongoUnitDocument.get(fieldName);
+      // Get MongoUnit value
+      MongoUnitValue mongoUnitValue = mongoUnitDocument.get(fieldName);
 
-      // Extract possibly different BSON value
-      Object bsonFieldValue;
+      // Extract possibly BSON value
+      Object bsonValue;
       try {
 
-        bsonFieldValue = toBsonValue(mongoUnitFieldValue, mongoUnitProperties);
+        bsonValue = toBsonValue(mongoUnitValue);
 
       } catch (MongoUnitException mongoUnitException) {
 
@@ -713,198 +528,157 @@ public class MongoUnitUtil {
       }
 
       // Add name/value pair to BSON document
-      bsonDocument.append(fieldName, bsonFieldValue);
+      bsonDocument.append(fieldName, bsonValue);
     }
 
     return bsonDocument;
   }
 
   /**
-   * @param mongoUnitFieldValue Object that contains some value. Value can be in the MongoUnit
-   * schema format, specifying 'bsonType' (by default, or some other configured field name), etc.,
-   * or it can be a regular document, array, etc.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * @param mongoUnitValue {@link MongoUnitValue} that contains some value.
    * @return An instance of {@link Object} that contains either the raw object that needs to be
    * stored in the {@link Document} as value or some BSON specific construct, depending on what the
    * provided 'mongoUnitFieldValue' holds.
    * @throws MongoUnitException If anything goes wrong with translating the provided
-   * 'mongoUnitFieldValue'.
+   * 'mongoUnitValue'.
    */
   @SuppressWarnings("unchecked")
-  private static Object toBsonValue(
-      Object mongoUnitFieldValue,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+  private static Object toBsonValue(MongoUnitValue mongoUnitValue) throws MongoUnitException {
 
-    // Check if value is a map
-    if (mongoUnitFieldValue instanceof Map) {
-      return toBsonValueAsMap((Map<String, Object>) mongoUnitFieldValue, mongoUnitProperties);
+    Object rawValue = mongoUnitValue.getValue();
+
+    // If specific BSON type is given, create real BSON typed value
+    if (mongoUnitValue.getBsonType() != null) {
+
+      return toBsonTypedValue(mongoUnitValue);
+
+    } else if (rawValue instanceof Map) {
+
+      // No explicit BSON type specified; Check if value is a map
+      return toBsonDocument((Map<String, MongoUnitValue>) rawValue);
+
+    } else if (rawValue instanceof List) {
+
+      // No explicit BSON type specified & not a map; Check if value is a list
+      return toBsonValueAsList((List<MongoUnitValue>) mongoUnitValue);
+
+    } else {
+      // Not a container value (map or list) and no BSON type specified, so return as is
+      return rawValue;
     }
-
-    // Check if value is a list
-    if (mongoUnitFieldValue instanceof List) {
-      return toBsonValueAsList((List<Object>) mongoUnitFieldValue, mongoUnitProperties);
-    }
-
-    // Not a container value, so return as is
-    return mongoUnitFieldValue;
   }
 
   /**
-   * @param mongoUnitArrayFieldValue {@link List} of objects (array) that are to be attempted to be
-   * extracted as List of BSON objects.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
-   * @return List of potentially BSON objects extracted from the provided
-   * 'mongoUnitArrayFieldValue'.
+   * @param mongoUnitValues {@link List} of {@link MongoUnitValue}s.
+   * @return List of potentially BSON objects extracted from the provided 'mongoUnitValues'.
    * @throws MongoUnitException If anything goes wrong with translating the provided
-   * 'mongoUnitArrayFieldValue'.
+   * 'mongoUnitValues'.
    */
-  private static List<Object> toBsonValueAsList(
-      List<Object> mongoUnitArrayFieldValue,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+  private static List<Object> toBsonValueAsList(List<MongoUnitValue> mongoUnitValues)
+      throws MongoUnitException {
 
-    List<Object> array = new ArrayList<>();
+    List<Object> bsonArray = new ArrayList<>();
 
-    for (Object mongoUnitFieldValue : mongoUnitArrayFieldValue) {
+    for (MongoUnitValue mongoUnitFieldValue : mongoUnitValues) {
 
       // Attempt to convert to BSON object
-      Object bsonFieldValue = toBsonValue(mongoUnitFieldValue, mongoUnitProperties);
-      array.add(bsonFieldValue);
+      Object bsonValue = toBsonValue(mongoUnitFieldValue);
+      bsonArray.add(bsonValue);
     }
 
-    return array;
+    return bsonArray;
   }
 
   /**
-   * @param mongoUnitMapValue {@link Map} of values that can possibly be in the MongoUnit schema
-   * value format, specifying 'bsonType' (by default, or some other configured field name), or some
-   * other, etc., or it can be a regular document.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
-   * @return An {@link Object} that either represents a regular BSON {@link Document} or a specific
-   * {@link org.bson.BsonType} typed value.
-   * @throws MongoUnitException If anything goes wrong with translating the provided
-   * 'mongoUnitMapValue'.
-   */
-  private static Object toBsonValueAsMap(
-      Map<String, Object> mongoUnitMapValue,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
-
-    String fieldNameIndicator = mongoUnitProperties.getMongoUnitValueFieldNameIndicator();
-
-    // Check if map is in special MongoUnit schema format
-    if (isMongoUnitValue(mongoUnitMapValue, fieldNameIndicator)) {
-
-      // Map is not a bson document but a MongoUnit schema to represent BSON typed single value
-      return toBsonTypedValue(mongoUnitMapValue, mongoUnitProperties);
-    }
-
-    return toBsonDocument(mongoUnitMapValue, mongoUnitProperties);
-  }
-
-  /**
-   * @param mongoUnitBsonTypedValue Map of values that represent a MongoUnit BSON typed value.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * Note! This method can NOT be called if 'mongoUnitValue.getBsonType' return null.
+   *
+   * @param mongoUnitValue {@link MongoUnitValue} with a non-null 'bsonType' property.
    * @return An {@link Object} that represents a single {@link org.bson.BsonType} typed value,
    * correctly created as a BsonXXX instance.
    * @throws MongoUnitException If anything goes wrong with translating the provided
-   * 'mongoUnitBsonTypedValue'.
+   * 'mongoUnitValue'.
    */
   @SuppressWarnings("unchecked")
-  private static Object toBsonTypedValue(
-      Map<String, Object> mongoUnitBsonTypedValue,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+  private static Object toBsonTypedValue(MongoUnitValue mongoUnitValue)
+      throws MongoUnitException {
 
-    // Extract 'bsonType' and 'value' values out of the map
-    String fieldNameIndicator = mongoUnitProperties.getMongoUnitValueFieldNameIndicator();
-    MongoUnitValue mongoUnitValue =
-        extractMongoUnitValue(mongoUnitBsonTypedValue, fieldNameIndicator);
-    String bsonType = mongoUnitValue.getBsonType();
-    Object value = mongoUnitValue.getValue();
-
-    // Check that these field names are present
-    if (bsonType == null || (bsonType.equals("NULL") && value == null)) {
-
-      String message = "\"" + fieldNameIndicator + "BSON_TYPE\": value must be present in a"
-          + " MongoUnit value type specification. 'value' can only be 'null' if 'BSON_TYPE' is"
-          + " a string 'NULL' value.";
-      log.error(message);
-      throw new MongoUnitException(message);
-    }
+    BsonType bsonType = mongoUnitValue.getBsonType();
+    Object rawValue = mongoUnitValue.getValue();
 
     try {
-      // Extract value based on the BsonType - Strings match BsonType enum names
       switch (bsonType) {
 
-        case "ARRAY":
-          return toBsonValueAsList((List<Object>) value, mongoUnitProperties);
+        case ARRAY:
+          return toBsonValueAsList((List<MongoUnitValue>) rawValue);
 
-        case "DOCUMENT":
-          return toBsonDocument((Map<String, Object>) value, mongoUnitProperties);
+        case DOCUMENT:
+          return toBsonDocument((Map<String, MongoUnitValue>) rawValue);
 
-        case "DOUBLE":
-          return new BsonDouble((double) value);
+        case DOUBLE:
+          return new BsonDouble((double) rawValue);
 
-        case "STRING":
-          return new BsonString((String) value);
+        case STRING:
+          return new BsonString((String) rawValue);
 
-        case "BINARY":
+        case BINARY:
           // Decode using Base64 encoding
-          return new BsonBinary(Base64.getDecoder().decode((String) value));
+          return new BsonBinary(Base64.getDecoder().decode((String) rawValue));
 
-        case "OBJECT_ID":
-          return new BsonObjectId(new ObjectId((String) value));
+        case OBJECT_ID:
+          return new BsonObjectId(new ObjectId((String) rawValue));
 
-        case "BOOLEAN":
-          return new BsonBoolean((boolean) value);
+        case BOOLEAN:
+          return new BsonBoolean((boolean) rawValue);
 
-        case "DATE_TIME":
+        case DATE_TIME:
 
           try {
 
             SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-            Date date = format.parse((String) value);
+            Date date = format.parse((String) rawValue);
             return new BsonDateTime(date.getTime());
 
           } catch (ParseException e) {
             String message = "Date value was not in the supported format of"
-                + DATE_STRING_FORMAT + ". Tried to parse '" + value + "'.";
+                + DATE_STRING_FORMAT + ". Tried to parse '" + rawValue + "'.";
             log.error(message);
             throw new MongoUnitException(message);
           }
 
-        case "NULL":
+        case NULL:
           return new BsonNull();
 
-        case "UNDEFINED":
+        case UNDEFINED:
           return new BsonUndefined();
 
-        case "REGULAR_EXPRESSION":
-          return new BsonRegularExpression((String) value);
+        case REGULAR_EXPRESSION:
+          return new BsonRegularExpression((String) rawValue);
 
-        case "DB_POINTER":
+        case DB_POINTER:
           // Use custom 'namespace' and 'objectId' as field names
-          Map<String, String> dbPointerValueMap = (Map<String, String>) value;
+          Map<String, String> dbPointerValueMap = (Map<String, String>) rawValue;
           return new BsonDbPointer(
               dbPointerValueMap.get("namespace"),
               new ObjectId(dbPointerValueMap.get("objectId")));
 
-        case "JAVASCRIPT":
-        case "JAVASCRIPT_WITH_SCOPE":
-          return new BsonJavaScript((String) value);
+        case JAVASCRIPT:
+        case JAVASCRIPT_WITH_SCOPE:
+          return new BsonJavaScript((String) rawValue);
 
-        case "SYMBOL":
-          return new BsonSymbol((String) value);
+        case SYMBOL:
+          return new BsonSymbol((String) rawValue);
 
-        case "INT32":
-          return new BsonInt32((int) value);
+        case INT32:
+          return new BsonInt32((int) rawValue);
 
-        case "TIMESTAMP":
-          return new BsonTimestamp((long) value);
+        case TIMESTAMP:
+          return new BsonTimestamp((long) rawValue);
 
-        case "INT64":
-          return new BsonInt64((long) value);
+        case INT64:
+          return new BsonInt64((long) rawValue);
 
-        case "DECIMAL128":
-          return new BsonDecimal128(new Decimal128(new BigDecimal((double) value)));
+        case DECIMAL128:
+          return new BsonDecimal128(new Decimal128(BigDecimal.valueOf((double) rawValue)));
 
         // END_OF_DOCUMENT, MIN_KEY, MAX_KEY
         default:
@@ -920,53 +694,53 @@ public class MongoUnitUtil {
 
     } catch (Exception exception) {
 
-      String message = "Failed to treat value '" + value + "' of type '"
-          + value.getClass().getName() + "' as the provided bsonType '" + bsonType + "'.";
+      String message = "Failed to treat value '" + rawValue + "' of type '"
+          + rawValue.getClass().getName() + "' as the provided bsonType '" + bsonType + "'.";
       throw new MongoUnitException(message);
 
     }
   }
 
-  /**
-   * @param mongoUnitValueDocument Map which contains keys in the special MongoUnit value format.
-   * @param fieldNameIndicator Field name indicator that is configured to be a trigger to recognize
-   * that the provided 'mongoUnitValueDocument' is using a special MongoUnit schema format.
-   * @return Instance of {@link MongoUnitValue} which contains actual value, BsonType, and
-   * comparator.
-   * @throws MongoUnitException If no keys in the provided 'mongoUnitValueDocument' contain the
-   * special trigger indicator provided by 'fieldNameIndicator'.
-   */
-  public static MongoUnitValue extractMongoUnitValue(
-      Map<String, Object> mongoUnitValueDocument,
-      String fieldNameIndicator) throws MongoUnitException {
-
-    // Extract all keys
-    Set<String> allKeys = mongoUnitValueDocument.keySet();
-
-    // Find key that contains field name indicator
-    String indicatorKey = allKeys
-        .stream()
-        .filter(key -> key.startsWith(fieldNameIndicator))
-        .findAny()
-        .<MongoUnitException>orElseThrow(() -> {
-          String message = "Error: the following document was expected to have special"
-              + " MongoUnit value format but didn't: '" + mongoUnitValueDocument + "'.";
-          throw new MongoUnitException(message);
-        });
-
-    // Extract bson type; if not there, set it to null
-    String bsonType = indicatorKey.substring(fieldNameIndicator.length());
-    bsonType = bsonType.trim().length() == 0 ? null : bsonType;
-
-    Object value = mongoUnitValueDocument.get(indicatorKey);
-    String comparatorValue = (String) mongoUnitValueDocument.get(COMPARATOR_FIELD_NAME);
-
-    return MongoUnitValue.builder()
-        .bsonType(bsonType)
-        .value(value)
-        .comparatorValue(comparatorValue)
-        .build();
-  }
+  //  /**
+  //   * @param mongoUnitValueDocument Map which contains keys in the special MongoUnit value format.
+  //   * @param fieldNameIndicator Field name indicator that is configured to be a trigger to recognize
+  //   * that the provided 'mongoUnitValueDocument' is using a special MongoUnit schema format.
+  //   * @return Instance of {@link MongoUnitValue} which contains actual value, BsonType, and
+  //   * comparator.
+  //   * @throws MongoUnitException If no keys in the provided 'mongoUnitValueDocument' contain the
+  //   * special trigger indicator provided by 'fieldNameIndicator'.
+  //   */
+  //  public static MongoUnitValue extractMongoUnitValue(
+  //      Map<String, Object> mongoUnitValueDocument,
+  //      String fieldNameIndicator) throws MongoUnitException {
+  //
+  //    // Extract all keys
+  //    Set<String> allKeys = mongoUnitValueDocument.keySet();
+  //
+  //    // Find key that contains field name indicator
+  //    String indicatorKey = allKeys
+  //        .stream()
+  //        .filter(key -> key.startsWith(fieldNameIndicator))
+  //        .findAny()
+  //        .<MongoUnitException>orElseThrow(() -> {
+  //          String message = "Error: the following document was expected to have special"
+  //              + " MongoUnit value format but didn't: '" + mongoUnitValueDocument + "'.";
+  //          throw new MongoUnitException(message);
+  //        });
+  //
+  //    // Extract bson type; if not there, set it to null
+  //    String bsonType = indicatorKey.substring(fieldNameIndicator.length());
+  //    bsonType = bsonType.trim().length() == 0 ? null : bsonType;
+  //
+  //    Object value = mongoUnitValueDocument.get(indicatorKey);
+  //    String comparatorValue = (String) mongoUnitValueDocument.get(COMPARATOR_FIELD_NAME);
+  //
+  //    return MongoUnitValue.builder()
+  //        .bsonType(bsonType)
+  //        .value(value)
+  //        .comparatorValue(comparatorValue)
+  //        .build();
+  //  }
 
   /**
    * Returns An {@link AssertionResult} with a 'match' of 'true' if the provided 'expected' and
@@ -977,28 +751,29 @@ public class MongoUnitUtil {
    *
    * 1) Match is not effected if 'expected' is missing a field name in its definition.
    *
-   * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
-   * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is how every field
-   * value compared by default if the special document containing "comparator" is not present.
-   * "&lt;" and "&gt;" compare values to ensure one is less than or greater than the other. These
-   * comparisons will work for Strings, dates, date/time stamps, numbers (or any type that
-   * implements {@link Comparable} interface).
+   * 2) Individual {@link MongoUnitValue}s are compared using the 'expected' optional 'comparator'
+   * field. If not specified, the 'comparator' field defaults to "=". The 'comparator' value can be:
+   * "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". "&lt;" and "&gt;" compare values to ensure one is
+   * less than or greater than the other. These comparisons will work for Strings, dates, date/time
+   * stamps, numbers (or any type that implements {@link Comparable} interface).
+   *
+   * 3) If 'expected' {@link MongoUnitValue}'s 'bsonType' property is specified, the comparison is
+   * attempted using assuming that type (where it makes a difference), otherwise just the 'expected'
+   * {@link MongoUnitValue}'s 'value' property is compared to the 'actual' {@link MongoUnitValue}'s
+   * 'value' property.
    *
    * @param expected List of {@link MongoUnitCollection}s that the provided 'actual' dataset is to
-   * be compared against. An identical list is not necessarily to achieve a match and thus this list
-   * may contain special fields that guide the matching process.
-   * @param actual List of {@link MongoUnitCollection}s retrieved from the database after the target
-   * test call.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * be compared against. An identical list is not necessarily to achieve a match. Properties
+   * missing from the 'expected' are ignored and do not affect the comparison.
+   * @param actual List of {@link MongoUnitCollection}s to compare 'expected' against, usually
+   * retrieved from the database after the target test call.
    * @return An {@link AssertionResult} with a 'match' of 'true' if the provided 'expected' and
    * 'actual' lists of {@link MongoUnitCollection}s match according to the MongoUnit framework
    * rules, or with 'false' otherwise.
    */
   public static AssertionResult assertMatches(
       List<MongoUnitCollection> expected,
-      List<MongoUnitCollection> actual,
-      MongoUnitProperties mongoUnitProperties) {
+      List<MongoUnitCollection> actual) {
 
     // Assert the same number of collections
     if (expected.size() != actual.size()) {
@@ -1032,8 +807,7 @@ public class MongoUnitUtil {
 
         singleCollectionAssertionResult = assertMatches(
             expectedMongoUnitCollection,
-            actualMongoUnitCollection,
-            mongoUnitProperties);
+            actualMongoUnitCollection);
 
       } catch (MongoUnitException mongoUnitException) {
 
@@ -1054,37 +828,26 @@ public class MongoUnitUtil {
   }
 
   /**
-   * Returns An {@link AssertionResult} with a 'match' of 'true'  if the provided 'expected' and
+   * Returns an {@link AssertionResult} with a 'match' of 'true'  if the provided 'expected' and
    * 'actual' {@link MongoUnitCollection}s match according to the MongoUnit framework rules, or with
    * 'false' otherwise.
    *
-   * Rules for matching:
-   *
-   * 1) Match is not effected if 'expected' is missing a field name in its definition.
-   *
-   * 2) Presence of a configurable special field name key ("$$" with the value to compare actual
-   * data with) in a document, allows framework to look for another special field "comparator". Its
-   * value can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is how every field
-   * value compared by default if the special document containing "comparator" is not present.
-   * "&lt;" and "&gt;" compare values to ensure one is less than or greater than the other. These
-   * comparisons will work for Strings, dates, date/time stamps, numbers (or any type that
-   * implements {@link Comparable} interface).
+   * For rules, see Javadoc of {@link MongoUnitUtil#assertMatches(List, List)}.
    *
    * @param expected {@link MongoUnitCollection}s that the provided 'actual' dataset is to be
-   * compared against. An identical list is not necessarily to achieve a match and thus this list
-   * may contain special fields that guide the matching process.
-   * @param actual {@link MongoUnitCollection}s retrieved from the database after the target test
-   * call.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * compared against. An identical list is not necessarily to achieve a match. Properties missing
+   * from the 'expected' are ignored and do not affect the comparison.
+   * @param actual {@link MongoUnitCollection}s to compare 'expected' against, usually retrieved
+   * from the database after the target test call.
    * @return An {@link AssertionResult} with a 'match' of 'true'  if the provided 'expected' and
    * 'actual' {@link MongoUnitCollection}s match according to the MongoUnit framework rules, or with
    * 'false' otherwise.
-   * @throws MongoUnitException If the expected collection name is null.
+   * @throws MongoUnitException If the expected collection name is null or anything else goes wrong
+   * with this assertion.
    */
   public static AssertionResult assertMatches(
       MongoUnitCollection expected,
-      MongoUnitCollection actual,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+      MongoUnitCollection actual) throws MongoUnitException {
 
     // Verify expected collection name is not null
     if (expected.getCollectionName() == null) {
@@ -1099,8 +862,8 @@ public class MongoUnitUtil {
       return new AssertionResult(false, message);
     }
 
-    List<Map<String, Object>> expectedDocuments = expected.getDocuments();
-    List<Map<String, Object>> actualDocuments = actual.getDocuments();
+    List<Map<String, MongoUnitValue>> expectedDocuments = expected.getDocuments();
+    List<Map<String, MongoUnitValue>> actualDocuments = actual.getDocuments();
 
     // Assert number of documents match
     if (expectedDocuments.size() != actualDocuments.size()) {
@@ -1114,15 +877,14 @@ public class MongoUnitUtil {
     for (int i = 0; i < expectedDocuments.size(); i++) {
 
       // Get same indexed expected and actual documents
-      Map<String, Object> expectedDocument = expectedDocuments.get(i);
-      Map<String, Object> actualDocument = actualDocuments.get(i);
+      Map<String, MongoUnitValue> expectedDocument = expectedDocuments.get(i);
+      Map<String, MongoUnitValue> actualDocument = actualDocuments.get(i);
 
       // Assert single document matches
       AssertionResult singleDocumentAssertionResult;
       try {
 
-        singleDocumentAssertionResult =
-            assertMatches(expectedDocument, actualDocument, mongoUnitProperties);
+        singleDocumentAssertionResult = assertMatches(expectedDocument, actualDocument);
 
       } catch (MongoUnitException mongoUnitException) {
 
@@ -1148,43 +910,42 @@ public class MongoUnitUtil {
    * and 'actualDocument' match according to the MongoUnit framework rules, or with 'false'
    * otherwise.
    *
+   * For rules, see Javadoc of {@link MongoUnitUtil#assertMatches(List, List)}.
+   *
    * Fields not included in the provided 'expectedDocument' are assumed irrelevant to the match.
    *
-   * @param expectedDocument {@link Map} of field names with values that represent the expected
-   * document.
-   * @param actualDocument {@link Map} of field names with values that represents actual document in
-   * the database.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * @param expectedDocument {@link Map} of field names with {@link MongoUnitValue}s that represent
+   * the expected document.
+   * @param actualDocument {@link Map} of field names with {@link MongoUnitValue}s that represents
+   * actual document in the database.
    * @return An {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedDocument'
    * and 'actualDocument' match according to the MongoUnit framework rules, or with 'false'
    * otherwise.
    * @throws MongoUnitException If anything goes wrong with processing this assertion.
    */
   public static AssertionResult assertMatches(
-      Map<String, Object> expectedDocument,
-      Map<String, Object> actualDocument,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+      Map<String, MongoUnitValue> expectedDocument,
+      Map<String, MongoUnitValue> actualDocument) throws MongoUnitException {
 
     // Loop through all expected field names and check for match in actual
     Set<String> expectedFieldNames = expectedDocument.keySet();
     for (String expectedFieldName : expectedFieldNames) {
 
       // Assert field with the same exists in actual
-      Object actualValue = actualDocument.get(expectedFieldName);
+      MongoUnitValue actualValue = actualDocument.get(expectedFieldName);
       if (actualValue == null) {
 
         String message = "Expected field name '" + expectedFieldName + "' to be present.";
         return new AssertionResult(false, message);
       }
 
-      Object expectedValue = expectedDocument.get(expectedFieldName);
+      MongoUnitValue expectedValue = expectedDocument.get(expectedFieldName);
 
       // Assert values match
       AssertionResult singleValueAssertionResult;
       try {
 
-        singleValueAssertionResult =
-            assertMatchesValue(expectedValue, actualValue, mongoUnitProperties);
+        singleValueAssertionResult = assertMatches(expectedValue, actualValue);
 
       } catch (MongoUnitException mongoUnitException) {
 
@@ -1205,99 +966,83 @@ public class MongoUnitUtil {
   }
 
   /**
+   * Return an {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue' and
+   * 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
+   *
+   * Rules for matching (repeated from Javadoc of {@link MongoUnitUtil#assertMatches(List, List)}):
+   *
+   * 1) Match is not effected if 'expected' is missing a field name in its definition.
+   *
+   * 2) Individual {@link MongoUnitValue}s are compared using the 'expected' optional 'comparator'
+   * field. If not specified, the 'comparator' field defaults to "=". The 'comparator' value can be:
+   * "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". "&lt;" and "&gt;" compare values to ensure one is
+   * less than or greater than the other. These comparisons will work for Strings, dates, date/time
+   * stamps, numbers (or any type that implements {@link Comparable} interface).
+   *
+   * 3) If 'expected' {@link MongoUnitValue}'s 'bsonType' property is specified, the comparison is
+   * attempted using assuming that type (where it makes a difference), otherwise just the 'expected'
+   * {@link MongoUnitValue}'s 'value' property is compared to the 'actual' {@link MongoUnitValue}'s
+   * 'value' property.
+   *
    * @param expectedValue Expected value.
-   * @param actualValue Actual value retrieved from the database.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
+   * @param actualValue Actual value.
    * @return An {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue'
    * and 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
    * @throws MongoUnitException If anything goes wrong with processing this assertion.
    */
   @SuppressWarnings("unchecked")
-  public static AssertionResult assertMatchesValue(
-      Object expectedValue,
-      Object actualValue,
-      MongoUnitProperties mongoUnitProperties) throws MongoUnitException {
+  public static AssertionResult assertMatches(
+      MongoUnitValue expectedValue,
+      MongoUnitValue actualValue) throws MongoUnitException {
 
-    // Determine if expected value is a document
-    if (expectedValue instanceof Map) {
+    BsonType expectedBsonType = expectedValue.getBsonType();
+    Object expectedRawValue = expectedValue.getValue();
+    Object actualRawValue = actualValue.getValue();
 
-      // Determine if expected value is a special MongoUnit document
-      String fieldNameIndicator = mongoUnitProperties.getMongoUnitValueFieldNameIndicator();
-      if (isMongoUnitValue((Map<String, Object>) expectedValue, fieldNameIndicator)) {
+    // Is expected value a document?
+    if (expectedBsonType == BsonType.DOCUMENT || expectedRawValue instanceof Map) {
 
-        // Assert match using specialized MongoUnit value comparator
-        return assertMatchesMongoUnitValue(
-            (Map<String, Object>) expectedValue,
-            actualValue,
-            fieldNameIndicator);
-
-      } else {
-
-        // Assert actual value is also a document
-        if (!(actualValue instanceof Map)) {
-          String message = "Expected a document but got '" + actualValue + "'.";
-          return new AssertionResult(false, message);
-        }
-
-        // Assert match as a regular document
-        return assertMatches(
-            (Map<String, Object>) expectedValue,
-            (Map<String, Object>) actualValue,
-            mongoUnitProperties);
+      // Assert actual value is also a document
+      if (!(actualRawValue instanceof Map)) {
+        String message = "Expected a document but got '" + actualRawValue + "'.";
+        return new AssertionResult(false, message);
       }
 
-    } else if (expectedValue instanceof List) {
+      // Assert match as a regular document
+      return assertMatches(
+          (Map<String, MongoUnitValue>) expectedRawValue,
+          (Map<String, MongoUnitValue>) actualRawValue);
+
+      // Is expected value an array?
+    } else if (expectedBsonType == BsonType.ARRAY || expectedRawValue instanceof List) {
 
       // Assert actual value is also a list
-      if (!(actualValue instanceof List)) {
-        String message = "Expected an array but got '" + actualValue + "'.";
+      if (!(actualRawValue instanceof List)) {
+        String message = "Expected an array but got '" + actualRawValue + "'.";
         return new AssertionResult(false, message);
       }
 
       // Assert lists match
       return assertMatch(
-          (List) expectedValue,
-          (List) actualValue,
-          mongoUnitProperties);
+          (List<MongoUnitValue>) expectedRawValue,
+          (List<MongoUnitValue>) actualRawValue);
 
-    } else { // Anything other than Map or List
+    } else {
 
-      // Try to cast expected
-      Comparable comparableExpected = expectedToComparable(expectedValue, null);
-
-      // Assert that actual is also not a Map or a List; if not, cast to Comparable
-      if (actualValue instanceof Map || actualValue instanceof List) {
-        String message = "Expected '" + expectedValue + "' but got '" + actualValue + "'.";
-        return new AssertionResult(false, message);
-      }
-
-      Comparable comparableActual = actualToComparable(actualValue);
-
-      // Compare expected and actual
-      int comparison = compare(comparableExpected, comparableActual);
-
-      // Assert values match
-      if (comparison != 0) {
-        String message = "Expected '" + comparableExpected + "' to be equal to '"
-            + comparableActual + "'";
-        return new AssertionResult(false, message);
-      }
-
-      return new AssertionResult(true, "Values match.");
+      // Assert single (not Document/Map or Array/List type) MongoUnitValue
+      return assertMatchesNonContainerMongoUnitValue(expectedValue, actualValue);
     }
   }
 
   /**
    * @param expectedList List of values expected.
    * @param actualList List of actual values.
-   * @param mongoUnitProperties Collection of properties framework was configured with.
    * @return An {@link AssertionResult} with a 'match' of 'true' if the provided 'expectedList' and
    * 'actualList' match according to the MongoUnit framework rules, or with 'false' otherwise.
    */
   private static AssertionResult assertMatch(
-      List expectedList,
-      List actualList,
-      MongoUnitProperties mongoUnitProperties) {
+      List<MongoUnitValue> expectedList,
+      List<MongoUnitValue> actualList) {
 
     // Assert lists are the same size
     if (expectedList.size() != actualList.size()) {
@@ -1310,10 +1055,9 @@ public class MongoUnitUtil {
     // Loop over expected list and assert match in actual list
     for (int i = 0; i < expectedList.size(); i++) {
 
-      Object expectedValue = expectedList.get(i);
-      Object actualValue = actualList.get(i);
-      AssertionResult singleListValueAssertionResult =
-          assertMatchesValue(expectedValue, actualValue, mongoUnitProperties);
+      MongoUnitValue expectedValue = expectedList.get(i);
+      MongoUnitValue actualValue = actualList.get(i);
+      AssertionResult singleListValueAssertionResult = assertMatches(expectedValue, actualValue);
 
       if (!singleListValueAssertionResult.isMatch()) {
         return singleListValueAssertionResult;
@@ -1327,13 +1071,22 @@ public class MongoUnitUtil {
    * Returns {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue' and
    * 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
    *
-   * The value of "comparator" can be either "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". The "=" is
-   * how every field value compared by default if the special document containing "comparator" is
-   * not present. "&lt;" and "&gt;" compare values to ensure one is less than or greater than the
-   * other. The "&gt;=" and "&lt;=" compare values to ensure one is less than or greater than or
-   * equal to the other.
+   * NOTE: 'expectedValue' and 'actualValue' are both expected to be representing a non-container
+   * value, i.e., they are not Document/Map or Array/List.
    *
-   * If the "comparator" field is not specified, it's assumed to be "=".
+   * Relevant rule for matching (repeated from Javadoc of {@link MongoUnitUtil#assertMatches(List,
+   * List)}):
+   *
+   * 2) Individual {@link MongoUnitValue}s are compared using the 'expected' optional 'comparator'
+   * field. If not specified, the 'comparator' field defaults to "=". The 'comparator' value can be:
+   * "=", "!=", "&gt;", "&lt;", "&gt;=", "&lt;=". "&lt;" and "&gt;" compare values to ensure one is
+   * less than or greater than the other. These comparisons will work for Strings, dates, date/time
+   * stamps, numbers (or any type that implements {@link Comparable} interface).
+   *
+   * 3) If 'expected' {@link MongoUnitValue}'s 'bsonType' property is specified, the comparison is
+   * attempted using assuming that type (where it makes a difference), otherwise just the 'expected'
+   * {@link MongoUnitValue}'s 'value' property is compared to the 'actual' {@link MongoUnitValue}'s
+   * 'value' property.
    *
    * "&gt;" assertion is read: is expected greater than actual, i.e., expected &gt; actual. "&lt;"
    * assertion is read: is expected less than actual, i.e., expected &lt; actual, etc.
@@ -1341,50 +1094,64 @@ public class MongoUnitUtil {
    * These comparisons will ONLY work for strings, dates, date/time stamps, numbers (or any type
    * that implements {@link Comparable} interface).
    *
-   * @param expectedMongoUnitValue Expected value expressed as a special MongoUnit value document,
-   * including the "comparator" field which dictates how its "value" field value should be compared
-   * to the provided 'actualValue'.
+   * @param expectedValue Expected value expressed as a special MongoUnit value document, including
+   * the "comparator" field which dictates how its "value" field value should be compared to the
+   * provided 'actualValue'.
    * @param actualValue Actual value extracted from the database.
-   * @param fieldNameIndicator Field name indicator that is configured to be a trigger to recognize
-   * that the provided 'value' is using a special MongoUnit schema format.
    * @return An {@link AssertionResult} with a 'match' of 'true'  if the provided 'expectedValue'
    * and 'actualValue' match according to the MongoUnit framework rules, or with 'false' otherwise.
-   * @throws MongoUnitException If the developer specified expected value appears not to be of type
-   * {@link Comparable} and therefore not supported.
+   * @throws MongoUnitException If there are inconsistencies how expected value was specified
+   * according to the MongoUnit framework rules.
    */
-  public static AssertionResult assertMatchesMongoUnitValue(
-      Map<String, Object> expectedMongoUnitValue,
-      Object actualValue,
-      String fieldNameIndicator) throws MongoUnitException {
+  private static AssertionResult assertMatchesNonContainerMongoUnitValue(
+      MongoUnitValue expectedValue,
+      MongoUnitValue actualValue) throws MongoUnitException {
 
-    // Extract MongoUnit values
-    MongoUnitValue mongoUnitValue =
-        extractMongoUnitValue(expectedMongoUnitValue, fieldNameIndicator);
-    String comparator = mongoUnitValue.getComparatorValue();
-    String bsonType = mongoUnitValue.getBsonType();
-    Object expectedValue = mongoUnitValue.getValue();
+    String comparator = expectedValue.getComparator();
+    BsonType expectedBsonType = expectedValue.getBsonType();
+    Object expectedRawValue = expectedValue.getValue();
+    BsonType actualBsonType = actualValue.getBsonType();
+    Object actualRawValue = actualValue.getValue();
 
-    // Assume "=" if 'comparator' is null
-    if (comparator == null) {
+    // Assume "=" if 'comparator' is null or empty
+    if (comparator == null || comparator.trim().isEmpty()) {
       comparator = "=";
     }
 
     // Throw exception if expected is null and comparator is not either "=" or "!="
-    if (expectedValue == null && !comparator.equals("=") && !comparator.equals("!=")) {
+    if (expectedRawValue == null && !comparator.equals("=") && !comparator.equals("!=")) {
       String message = "If expected value is specified as 'null', comparator must either be '=' or"
           + " '!='.";
       log.error(message);
       throw new MongoUnitException(message);
     }
 
+    // If expected specifies BSON type, actual must match that same BSON type
+    if (expectedBsonType != null && expectedBsonType != actualBsonType) {
+
+      // Prep failed assertion message
+      String message = "Expected explicitly specified BSON type of '" + expectedBsonType
+          + "' but got '" + actualBsonType + "' BSON type.";
+      return new AssertionResult(false, message);
+    }
+
     // Try to cast expected & actual values to Comparable
-    Comparable comparableExpected = expectedToComparable(expectedValue, bsonType);
-    Comparable comparableActual = actualToComparable(actualValue);
+    @SuppressWarnings("rawtypes")
+    Comparable comparableExpected = toComparable(expectedRawValue, "Expected");
+    @SuppressWarnings("rawtypes")
+    Comparable comparableActual = toComparable(actualRawValue, "Actual");
 
     // Compare expected and actual
     int comparison = compare(comparableExpected, comparableActual);
 
-    // Assert depending on the 'comparator' value set by developer
+    // For developer assertion failure message readability, if date, format it as date
+    if (expectedBsonType == BsonType.DATE_TIME) {
+
+      comparableExpected = STANDARD_MONGO_DATE_FORMAT.format(comparableExpected);
+      comparableActual = STANDARD_MONGO_DATE_FORMAT.format(comparableActual);
+    }
+
+    // Assert depending on the 'comparator' value
     switch (comparator) {
 
       case "=":
@@ -1475,7 +1242,7 @@ public class MongoUnitUtil {
    * @return A negative integer, zero, or a positive integer as the expected is less than, equal to,
    * or greater than the actual.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public static int compare(Comparable expected, Comparable actual) {
 
     // Treat expected = null, actual != null as expected < actual
@@ -1497,136 +1264,114 @@ public class MongoUnitUtil {
   }
 
   /**
-   * @param actualValue Actual value to cast to {@link Comparable} type.
-   * @return The originally provided 'actualValue' by as a {@link Comparable} type.
+   * @param value Value to cast to {@link Comparable} type.
+   * @param valueTypeDescription Description of the 'value' to be cast to {@link Comparable}.
+   * Usually just a 1-word description like "'"Actual"'" or "Expected".
+   * @return The originally provided 'value' as a {@link Comparable} type.
    * @throws MongoUnitException If such a cast is not possible due to the underlying type of the
-   * provided 'actualValue'.
+   * provided 'value'.
    */
-  private static Comparable actualToComparable(Object actualValue)
+  @SuppressWarnings("rawtypes")
+  private static Comparable toComparable(Object value, String valueTypeDescription)
       throws MongoUnitException {
 
     try {
 
-      return (Comparable) actualValue;
+      return (Comparable) value;
 
     } catch (ClassCastException exception) {
 
-      String message = "Actual value of '" + actualValue + "' does not appears to be supported"
-          + " as Comparable. Its type appears to be '" + actualValue.getClass().getTypeName() + "'";
+      String message = valueTypeDescription + " value of '" + value + "' does not appears to be"
+          + " supported as Comparable. Its type appears to be '" + value.getClass().getTypeName()
+          + "'";
       log.error(message);
       throw new MongoUnitException(message, exception);
     }
   }
 
-  /**
-   * @param expectedValue Expected value to cast to {@link Comparable} type.
-   * @param bsonType String representation of the {@link org.bson.BsonType} enum label.
-   * @return The originally provided 'expectedValue' but as a {@link Comparable} type.
-   * @throws MongoUnitException If such a cast is not possible due to the underlying type of the
-   * provided 'expectedValue'.
-   */
-  private static Comparable expectedToComparable(Object expectedValue, String bsonType)
-      throws MongoUnitException {
-
-    // If expected value is null, always return 'null'
-    if (expectedValue == null) {
-      return null;
-    }
-
-    try {
-
-      // If bsonType isn't specified, just need to cast to Comparable
-      if (bsonType == null) {
-        return (Comparable) expectedValue;
-      }
-
-      switch (bsonType.trim()) {
-
-        // Cases where return is as is because it's already Comparable
-        case "":
-        case "DOUBLE":
-        case "STRING":
-        case "OBJECT_ID":
-        case "BOOLEAN":
-        case "BINARY":
-        case "NULL":
-        case "UNDEFINED":
-        case "REGULAR_EXPRESSION":
-        case "JAVASCRIPT":
-        case "SYMBOL":
-        case "JAVASCRIPT_WITH_SCOPE":
-        case "INT32":
-        case "TIMESTAMP":
-        case "INT64":
-        case "DECIMAL128":
-
-          return (Comparable) expectedValue;
-
-        case "DATE_TIME":
-
-          try {
-
-            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-            Date date = format.parse((String) expectedValue);
-            return date.getTime();
-
-          } catch (ParseException e) {
-            String message = "Date value was not in the supported format of "
-                + DATE_STRING_FORMAT + ". Tried to parse '" + expectedValue + "'.";
-            log.error(message);
-            throw new MongoUnitException(message);
-          }
-
-          // END_OF_DOCUMENT, MIN_KEY, MAX_KEY, DB_POINTER:
-        default:
-          String message = "BSON type " + bsonType + " is not currently supported by"
-              + " the MongoUnit framework.";
-          log.error(message);
-          throw new MongoUnitException(message);
-      }
-
-    } catch (ClassCastException exception) {
-
-      String message =
-          "Expected value of '" + expectedValue + "' does not appear to be supported as"
-              + " Comparable. Its type appears to be '" + expectedValue.getClass().getTypeName()
-              + "'.";
-
-      //noinspection ConstantConditions (IntelliJ inspection bug)
-      if (bsonType != null && !bsonType.equals("")) {
-        message += " Expected value's BSON type was specified to be '" + bsonType + "'.";
-      }
-
-      log.error(message);
-      throw new MongoUnitException(message, exception);
-    }
-  }
-
-  /**
-   * @param value A {@link Map} which represents a document to check if it's a special document
-   * representing a MongoUnit value (with special fields).
-   * @param fieldNameIndicator Field name indicator that is configured to be a trigger to recognize
-   * that the provided 'value' is using a special MongoUnit schema format.
-   * @return 'true' if the provided 'value' is an instance of a special MongoUnit schema format,
-   * 'false' otherwise.
-   */
-  private static boolean isMongoUnitValue(
-      Map<String, Object> value,
-      String fieldNameIndicator) {
-
-    // Get all keys of the value map
-    Set<String> allKeys = value.keySet();
-
-    // Loop through keys and see if any of them start with the fieldNameIndicator
-    for (String key : allKeys) {
-      if (key.startsWith(fieldNameIndicator)) {
-        return true;
-      }
-    }
-
-    // Looked through all the keys and didn't find special field name indicator
-    return false;
-  }
+  //  /**
+  //   * @param expectedValue Expected value to cast to {@link Comparable} type.
+  //   * @param bsonType String representation of the {@link org.bson.BsonType} enum label.
+  //   * @return The originally provided 'expectedValue' but as a {@link Comparable} type.
+  //   * @throws MongoUnitException If such a cast is not possible due to the underlying type of the
+  //   * provided 'expectedValue'.
+  //   */
+  //  private static Comparable expectedToComparable(Object expectedValue, String bsonType)
+  //      throws MongoUnitException {
+  //
+  //    // If expected value is null, always return 'null'
+  //    if (expectedValue == null) {
+  //      return null;
+  //    }
+  //
+  //    try {
+  //
+  //      // If bsonType isn't specified, just need to cast to Comparable
+  //      if (bsonType == null) {
+  //        return (Comparable) expectedValue;
+  //      }
+  //
+  //      switch (bsonType.trim()) {
+  //
+  //        // Cases where return is as is because it's already Comparable
+  //        case "":
+  //        case "DOUBLE":
+  //        case "STRING":
+  //        case "OBJECT_ID":
+  //        case "BOOLEAN":
+  //        case "BINARY":
+  //        case "NULL":
+  //        case "UNDEFINED":
+  //        case "REGULAR_EXPRESSION":
+  //        case "JAVASCRIPT":
+  //        case "SYMBOL":
+  //        case "JAVASCRIPT_WITH_SCOPE":
+  //        case "INT32":
+  //        case "TIMESTAMP":
+  //        case "INT64":
+  //        case "DECIMAL128":
+  //
+  //          return (Comparable) expectedValue;
+  //
+  //        case "DATE_TIME":
+  //
+  //          try {
+  //
+  //            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
+  //            Date date = format.parse((String) expectedValue);
+  //            return date.getTime();
+  //
+  //          } catch (ParseException e) {
+  //            String message = "Date value was not in the supported format of "
+  //                + DATE_STRING_FORMAT + ". Tried to parse '" + expectedValue + "'.";
+  //            log.error(message);
+  //            throw new MongoUnitException(message);
+  //          }
+  //
+  //          // END_OF_DOCUMENT, MIN_KEY, MAX_KEY, DB_POINTER:
+  //        default:
+  //          String message = "BSON type " + bsonType + " is not currently supported by"
+  //              + " the MongoUnit framework.";
+  //          log.error(message);
+  //          throw new MongoUnitException(message);
+  //      }
+  //
+  //    } catch (ClassCastException exception) {
+  //
+  //      String message =
+  //          "Expected value of '" + expectedValue + "' does not appear to be supported as"
+  //              + " Comparable. Its type appears to be '" + expectedValue.getClass().getTypeName()
+  //              + "'.";
+  //
+  //      //noinspection ConstantConditions (IntelliJ inspection bug)
+  //      if (bsonType != null && !bsonType.equals("")) {
+  //        message += " Expected value's BSON type was specified to be '" + bsonType + "'.";
+  //      }
+  //
+  //      log.error(message);
+  //      throw new MongoUnitException(message, exception);
+  //    }
+  //  }
 
   /**
    * Extracts {@link SeedWithDataset} and {@link AssertMatchesDataset} annotations from the provided

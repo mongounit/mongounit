@@ -27,7 +27,7 @@ public class MongoUnitCollection {
    * List of maps of field name/value pairs of all the documents in this collection, where each map
    * represents a single document.
    */
-  private List<Map<String, Object>> documents;
+  private List<Map<String, MongoUnitValue>> documents;
 
   /**
    * Default constructor.
@@ -42,8 +42,7 @@ public class MongoUnitCollection {
    * @param documents List of maps of field name/value pairs of all the documents in this
    * collection, where each map represents a single document.
    */
-  @SuppressWarnings("WeakerAccess")
-  public MongoUnitCollection(String collectionName, List<Map<String, Object>> documents) {
+  public MongoUnitCollection(String collectionName, List<Map<String, MongoUnitValue>> documents) {
     this.collectionName = collectionName;
     this.documents = documents;
   }
@@ -66,7 +65,7 @@ public class MongoUnitCollection {
    * @return List of maps of field name/value pairs of all the documents in this collection, where
    * each map represents a single document.
    */
-  public List<Map<String, Object>> getDocuments() {
+  public List<Map<String, MongoUnitValue>> getDocuments() {
     return this.documents;
   }
 
@@ -81,7 +80,7 @@ public class MongoUnitCollection {
    * @param documents List of maps of field name/value pairs of all the documents in this
    * collection, where each map represents a single document.
    */
-  public void setDocuments(List<Map<String, Object>> documents) {
+  public void setDocuments(List<Map<String, MongoUnitValue>> documents) {
     this.documents = documents;
   }
 
@@ -147,7 +146,7 @@ public class MongoUnitCollection {
      * List of maps of field name/value pairs of all the documents in this collection, where each
      * map represents a single document.
      */
-    private List<Map<String, Object>> documents;
+    private List<Map<String, MongoUnitValue>> documents;
 
     /**
      * Default constructor.
@@ -170,7 +169,7 @@ public class MongoUnitCollection {
      * @return Instance of this builder class.
      */
     public MongoUnitCollection.MongoUnitCollectionBuilder documents(
-        List<Map<String, Object>> documents) {
+        List<Map<String, MongoUnitValue>> documents) {
       this.documents = documents;
       return this;
     }

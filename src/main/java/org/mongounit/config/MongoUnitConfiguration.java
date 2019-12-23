@@ -8,7 +8,6 @@
  */
 package org.mongounit.config;
 
-import com.mongodb.MongoClientURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +63,7 @@ public class MongoUnitConfiguration {
     public void stop() {
 
       // Load mongo properties
-      MongoUnitProperties mongoProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
+      MongoUnitConfig mongoProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
 
       MongoDbFactory mongoDbFactory = applicationContext.getBean(MongoDbFactory.class);
 

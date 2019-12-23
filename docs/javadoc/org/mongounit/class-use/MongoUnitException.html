@@ -109,9 +109,9 @@
 <tbody>
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../org/mongounit/model/AssertionResult.html" title="class in org.mongounit.model">AssertionResult</a></code></td>
-<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatches-java.util.Map-java.util.Map-org.mongounit.config.MongoUnitProperties-">assertMatches</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&gt;&nbsp;expectedDocument,
+<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatches-java.util.Map-java.util.Map-org.mongounit.config.MongoUnitConfig-">assertMatches</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&gt;&nbsp;expectedDocument,
              <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html?is-external=true" title="class or interface in java.util">Map</a>&lt;<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&gt;&nbsp;actualDocument,
-             <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitProperties)</code>
+             <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitConfig)</code>
 <div class="block">Returns an <a href="../../../org/mongounit/model/AssertionResult.html" title="class in org.mongounit.model"><code>AssertionResult</code></a> with a 'match' of 'true'  if the provided 'expectedDocument'
  and 'actualDocument' match according to the MongoUnit framework rules, or with 'false'
  otherwise.</div>
@@ -119,9 +119,9 @@
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../org/mongounit/model/AssertionResult.html" title="class in org.mongounit.model">AssertionResult</a></code></td>
-<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatches-org.mongounit.model.MongoUnitCollection-org.mongounit.model.MongoUnitCollection-org.mongounit.config.MongoUnitProperties-">assertMatches</a></span>(<a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model">MongoUnitCollection</a>&nbsp;expected,
+<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatches-org.mongounit.model.MongoUnitCollection-org.mongounit.model.MongoUnitCollection-org.mongounit.config.MongoUnitConfig-">assertMatches</a></span>(<a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model">MongoUnitCollection</a>&nbsp;expected,
              <a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model">MongoUnitCollection</a>&nbsp;actual,
-             <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitProperties)</code>
+             <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitConfig)</code>
 <div class="block">Returns An <a href="../../../org/mongounit/model/AssertionResult.html" title="class in org.mongounit.model"><code>AssertionResult</code></a> with a 'match' of 'true'  if the provided 'expected' and
  'actual' <a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model"><code>MongoUnitCollection</code></a>s match according to the MongoUnit framework rules, or with
  'false' otherwise.</div>
@@ -178,9 +178,9 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static <a href="../../../org/mongounit/model/AssertionResult.html" title="class in org.mongounit.model">AssertionResult</a></code></td>
-<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatchesValue-java.lang.Object-java.lang.Object-org.mongounit.config.MongoUnitProperties-">assertMatchesValue</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;expectedValue,
+<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#assertMatchesValue-java.lang.Object-java.lang.Object-org.mongounit.config.MongoUnitConfig-">assertMatchesValue</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;expectedValue,
                   <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a>&nbsp;actualValue,
-                  <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitProperties)</code>&nbsp;</td>
+                  <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitConfig)</code>&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>static <a href="../../../org/mongounit/model/MongoUnitDatasets.html" title="class in org.mongounit.model">MongoUnitDatasets</a></code></td>
@@ -252,9 +252,9 @@
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>static void</code></td>
-<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#toDatabase-java.util.List-com.mongodb.client.MongoDatabase-org.mongounit.config.MongoUnitProperties-">toDatabase</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model">MongoUnitCollection</a>&gt;&nbsp;mongoUnitCollections,
+<td class="colLast"><span class="typeNameLabel">MongoUnitUtil.</span><code><span class="memberNameLink"><a href="../../../org/mongounit/MongoUnitUtil.html#toDatabase-java.util.List-com.mongodb.client.MongoDatabase-org.mongounit.config.MongoUnitConfig-">toDatabase</a></span>(<a href="https://docs.oracle.com/javase/8/docs/api/java/util/List.html?is-external=true" title="class or interface in java.util">List</a>&lt;<a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model">MongoUnitCollection</a>&gt;&nbsp;mongoUnitCollections,
           com.mongodb.client.MongoDatabase&nbsp;mongoDatabase,
-          <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitProperties)</code>
+          <a href="../../../org/mongounit/config/MongoUnitProperties.html" title="class in org.mongounit.config">MongoUnitProperties</a>&nbsp;mongoUnitConfig)</code>
 <div class="block">Seeds an existing database provided by 'mongoDatabase' with dataset represented in the <a href="../../../org/mongounit/model/MongoUnitCollection.html" title="class in org.mongounit.model"><code>MongoUnitCollection</code></a>s schema by the provided 'jsonMongoUnitCollections'.</div>
 </td>
 </tr>

@@ -11,7 +11,7 @@ package org.mongounit;
 import static org.mongounit.MongoUnitUtil.combineDatasets;
 import static org.mongounit.MongoUnitUtil.extractMongoUnitDatasets;
 import static org.mongounit.MongoUnitUtil.extractTestClassName;
-import static org.mongounit.MongoUnitUtil.fromDatabase;
+import static org.mongounit.MongoUnitUtil.toMongoUnitCollections;
 import static org.mongounit.MongoUnitUtil.toDatabase;
 import static org.mongounit.config.MongoUnitConfigurationUtil.loadMongoUnitProperties;
 
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
-import org.mongounit.config.MongoUnitProperties;
+import org.mongounit.config.MongoUnitConfig;
 import org.mongounit.model.AssertionResult;
 import org.mongounit.model.MongoUnitCollection;
 import org.mongounit.model.MongoUnitDatasets;
@@ -67,7 +67,7 @@ public class MongoUnitExtension implements
   private static final String MONGODB_STORE_KEY = "mongoDatabase";
 
   /**
-   * Key with which to store {@link MongoUnitProperties} instance in the context store.
+   * Key with which to store {@link MongoUnitConfig} instance in the context store.
    */
   private static final String MONGO_UNIT_PROPERTIES_KEY = "mongoUnitProperties";
 
@@ -102,8 +102,8 @@ public class MongoUnitExtension implements
     extensionStore.put(MONGODB_STORE_KEY, mongoDatabase);
 
     // Load MongoUnitProperties and save them in extension store
-    MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
-    extensionStore.put(MONGO_UNIT_PROPERTIES_KEY, mongoUnitProperties);
+    MongoUnitConfig mongoUnitConfig = loadMongoUnitProperties();
+    extensionStore.put(MONGO_UNIT_PROPERTIES_KEY, mongoUnitConfig);
 
     // Extract test class name based on the class and its MongoUnitTest annotation
     String testClassName = extractTestClassName(context.getRequiredTestClass());
@@ -122,8 +122,8 @@ public class MongoUnitExtension implements
     // Retrieve mongoDatabase and mongo unit properties from the extension namespace store
     Store extensionStore = getExtensionStore(context);
     MongoDatabase mongoDatabase = extensionStore.get(MONGODB_STORE_KEY, MongoDatabase.class);
-    MongoUnitProperties mongoUnitProperties =
-        extensionStore.get(MONGO_UNIT_PROPERTIES_KEY, MongoUnitProperties.class);
+    MongoUnitConfig mongoUnitConfig =
+        extensionStore.get(MONGO_UNIT_PROPERTIES_KEY, MongoUnitConfig.class);
 
     // Clear all collections out of the database
     MongoUnitUtil.dropAllCollectionsInDatabase(mongoDatabase);
@@ -151,7 +151,7 @@ public class MongoUnitExtension implements
 
     try {
       // Seed database with this dataset
-      toDatabase(combinedDataset, mongoDatabase, mongoUnitProperties);
+      toDatabase(combinedDataset, mongoDatabase, mongoUnitConfig);
 
     } catch (MongoUnitException mongoUnitException) {
 
@@ -167,8 +167,8 @@ public class MongoUnitExtension implements
     // Retrieve mongoDatabase and mongo unit properties from the extension namespace store
     Store extensionStore = getExtensionStore(context);
     MongoDatabase mongoDatabase = extensionStore.get(MONGODB_STORE_KEY, MongoDatabase.class);
-    MongoUnitProperties mongoUnitProperties =
-        extensionStore.get(MONGO_UNIT_PROPERTIES_KEY, MongoUnitProperties.class);
+    MongoUnitConfig mongoUnitConfig =
+        extensionStore.get(MONGO_UNIT_PROPERTIES_KEY, MongoUnitConfig.class);
 
     // Retrieve class-level datasets from store
     MongoUnitDatasets classLevelMongoUnitDatasets =
@@ -194,13 +194,13 @@ public class MongoUnitExtension implements
             methodLevelMongoUnitDatasets.getAssertMatchesDatasets());
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = toMongoUnitCollections(mongoDatabase, null, null);
 
     // Perform assertion
     AssertionResult assertionResult;
     try {
       assertionResult = MongoUnitUtil
-          .assertMatches(expectedDataset, actualDataset, mongoUnitProperties);
+          .assertMatches(expectedDataset, actualDataset, mongoUnitConfig);
     } catch (Exception exception) {
 
       // Log error and rethrow

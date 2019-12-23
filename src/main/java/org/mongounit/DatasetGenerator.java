@@ -8,8 +8,8 @@
  */
 package org.mongounit;
 
-import static org.mongounit.MongoUnitUtil.fromDatabase;
-import static org.mongounit.config.MongoUnitProperties.DEFAULT_MONGO_UNIT_VALUE_INDICATOR_FIELD_NAME;
+import static org.mongounit.MongoUnitUtil.toMongoUnitCollections;
+import static org.mongounit.config.MongoUnitConfig.DEFAULT_MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,7 +24,7 @@ import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.mongounit.config.MongoUnitProperties;
+import org.mongounit.config.MongoUnitConfig;
 import org.mongounit.model.MongoUnitCollection;
 
 /**
@@ -56,7 +56,7 @@ public class DatasetGenerator {
   /**
    * Argument name for the field name to use as an indicator in developer JSON files to signify that
    * a document is a representation of a special MongoUnit value. See {@link
-   * org.mongounit.config.MongoUnitProperties} for more details.
+   * MongoUnitConfig} for more details.
    */
   private static final String MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR_ARG_NAME =
       "mongoUnitValueFieldNameIndicator";
@@ -92,8 +92,8 @@ public class DatasetGenerator {
     MongoDatabase mongoDatabase = getMongoDatabase(arguments);
 
     // Setup and modify indicator based on argument MongoUnit properties
-    MongoUnitProperties mongoUnitProperties =
-        new MongoUnitProperties(
+    MongoUnitConfig mongoUnitConfig =
+        new MongoUnitConfig(
             null,
             null,
             arguments.getMongoUnitValueFieldNameIndicator(),
@@ -104,9 +104,9 @@ public class DatasetGenerator {
     List<MongoUnitCollection> mongoUnitCollections = null;
     try {
 
-      mongoUnitCollections = fromDatabase(
+      mongoUnitCollections = toMongoUnitCollections(
           mongoDatabase,
-          mongoUnitProperties,
+          mongoUnitConfig,
           arguments.getPreserveBsonTypes(),
           arguments.getCollectionNames().toArray(new String[0]));
     } catch (IllegalArgumentException exception) {
@@ -194,7 +194,7 @@ public class DatasetGenerator {
     List<String> collectionNames = new ArrayList<>();
     String outputPath = null;
     List<String> preserveBsonTypes = DEFAULT_PRESERVE_BSON_TYPES;
-    String mongoUnitValueFieldNameIndicator = DEFAULT_MONGO_UNIT_VALUE_INDICATOR_FIELD_NAME;
+    String mongoUnitValueFieldNameIndicator = DEFAULT_MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR;
 
     // Loop over argument and extract values
     for (String argument : args) {

@@ -10,14 +10,14 @@ package org.mongounit;
 
 import static org.mongounit.MongoUnitExtension.CURRENT_MONGO_DATABASE;
 import static org.mongounit.MongoUnitUtil.extractTestClassName;
-import static org.mongounit.MongoUnitUtil.fromDatabase;
+import static org.mongounit.MongoUnitUtil.toMongoUnitCollections;
 import static org.mongounit.MongoUnitUtil.retrieveDatasetFromLocations;
 import static org.mongounit.MongoUnitUtil.toDatabase;
 import static org.mongounit.config.MongoUnitConfigurationUtil.loadMongoUnitProperties;
 
 import com.mongodb.client.MongoDatabase;
 import java.util.List;
-import org.mongounit.config.MongoUnitProperties;
+import org.mongounit.config.MongoUnitConfig;
 import org.mongounit.model.AssertionResult;
 import org.mongounit.model.MongoUnitCollection;
 import org.opentest4j.AssertionFailedError;
@@ -71,9 +71,9 @@ public class MongoUnit {
         loadDatasetFromLocations(locations, locationType, relativePackageClass);
 
     // Seed database
-    MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
+    MongoUnitConfig mongoUnitConfig = loadMongoUnitProperties();
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
-    toDatabase(seedWithDataset, mongoDatabase, mongoUnitProperties);
+    toDatabase(seedWithDataset, mongoDatabase, mongoUnitConfig);
 
     return seedWithDataset;
   }
@@ -135,7 +135,7 @@ public class MongoUnit {
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = toMongoUnitCollections(mongoDatabase, null, null);
 
     // Perform assertion
     performAssertion(expectedDataset, actualDataset);
@@ -195,7 +195,7 @@ public class MongoUnit {
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
 
     // Retrieve actual dataset from database
-    List<MongoUnitCollection> actualDataset = fromDatabase(mongoDatabase, null, null);
+    List<MongoUnitCollection> actualDataset = toMongoUnitCollections(mongoDatabase, null, null);
 
     // Combine so there are no same-named repeated collections are present
     List<MongoUnitCollection> expectedDataset = MongoUnitUtil
@@ -319,13 +319,13 @@ public class MongoUnit {
       List<MongoUnitCollection> expectedDataset,
       List<MongoUnitCollection> actualDataset) throws MongoUnitException {
 
-    MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
+    MongoUnitConfig mongoUnitConfig = loadMongoUnitProperties();
 
     // Perform assertion
     AssertionResult assertionResult;
     try {
       assertionResult = MongoUnitUtil
-          .assertMatches(expectedDataset, actualDataset, mongoUnitProperties);
+          .assertMatches(expectedDataset, actualDataset, mongoUnitConfig);
     } catch (Exception exception) {
 
       // Log error and rethrow

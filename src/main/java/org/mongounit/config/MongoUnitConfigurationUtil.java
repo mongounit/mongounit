@@ -9,12 +9,12 @@
 package org.mongounit.config;
 
 import static java.time.ZoneId.SHORT_IDS;
-import static org.mongounit.config.MongoUnitProperties.BASE_URI_KEEP_AS_IS_PROP_NAME;
-import static org.mongounit.config.MongoUnitProperties.BASE_URI_PROP_NAME;
-import static org.mongounit.config.MongoUnitProperties.DROP_DATABASE_PROP_NAME;
-import static org.mongounit.config.MongoUnitProperties.MONGO_UNIT_FIELD_NAME_PROP_NAME;
-import static org.mongounit.config.MongoUnitProperties.MONGO_UNIT_PROPERTIES_FILE_URI;
-import static org.mongounit.config.MongoUnitProperties.TIME_ZONE_ID_PROP_NAME;
+import static org.mongounit.config.MongoUnitConfig.BASE_URI_KEEP_AS_IS_PROP_NAME;
+import static org.mongounit.config.MongoUnitConfig.BASE_URI_PROP_NAME;
+import static org.mongounit.config.MongoUnitConfig.DROP_DATABASE_PROP_NAME;
+import static org.mongounit.config.MongoUnitConfig.MONGO_UNIT_FIELD_NAME_PROP_NAME;
+import static org.mongounit.config.MongoUnitConfig.MONGO_UNIT_PROPERTIES_FILE_URI;
+import static org.mongounit.config.MongoUnitConfig.TIME_ZONE_ID_PROP_NAME;
 
 import com.mongodb.MongoClientURI;
 import java.io.InputStream;
@@ -40,9 +40,9 @@ public class MongoUnitConfigurationUtil {
   private static Logger log = LoggerFactory.getLogger(MongoUnitConfigurationUtil.class);
 
   /**
-   * Cached instance of {@link MongoUnitProperties}.
+   * Cached instance of {@link MongoUnitConfig}.
    */
-  private static MongoUnitProperties cachedMongoUnitProperties;
+  private static MongoUnitConfig cachedMongoUnitConfig;
 
   /**
    * Returns new {@link MongoClientURI} instance that contains newly generated URI, based on
@@ -55,11 +55,11 @@ public class MongoUnitConfigurationUtil {
   public static MongoClientURI generateNewMongoClientURI(Environment environment) {
 
     // Retrieve mongounit properties
-    MongoUnitProperties mongoUnitProperties = loadMongoUnitProperties();
+    MongoUnitConfig mongoUnitConfig = loadMongoUnitProperties();
 
-    boolean keepAsIs = mongoUnitProperties.isBaseUriKeepAsIs();
-    String baseUri = mongoUnitProperties.getBaseUri();
-    String timeZoneId = mongoUnitProperties.getTimeZoneId();
+    boolean keepAsIs = mongoUnitConfig.isBaseUriKeepAsIs();
+    String baseUri = mongoUnitConfig.getBaseUri();
+    String timeZoneId = mongoUnitConfig.getTimeZoneId();
 
     // Use default MongoUnit URI
     return generateNewMongoClientURI(baseUri, keepAsIs, timeZoneId);
@@ -140,14 +140,14 @@ public class MongoUnitConfigurationUtil {
   }
 
   /**
-   * @return Loaded {@link MongoUnitProperties}.
+   * @return Loaded {@link MongoUnitConfig}.
    */
   @SuppressWarnings("DuplicatedCode") // IntelliJ warning makes no sense
-  public static MongoUnitProperties loadMongoUnitProperties() {
+  public static MongoUnitConfig loadMongoUnitProperties() {
 
     // If cached already, just return the cached version
-    if (cachedMongoUnitProperties != null) {
-      return cachedMongoUnitProperties;
+    if (cachedMongoUnitConfig != null) {
+      return cachedMongoUnitConfig;
     }
 
     Properties mongoUnitProps = new Properties();
@@ -189,15 +189,15 @@ public class MongoUnitConfigurationUtil {
     timeZoneId = useSystemPropertyIfSpecified(TIME_ZONE_ID_PROP_NAME, timeZoneId);
 
     // Build MongoUnitProperties and cache it
-    MongoUnitProperties mongoUnitProperties = new MongoUnitProperties(
+    MongoUnitConfig mongoUnitConfig = new MongoUnitConfig(
         baseUri,
         baseUriKeepAsIs,
         mongoUnitFieldNameIndicator,
         dropDatabase,
         timeZoneId);
-    cachedMongoUnitProperties = mongoUnitProperties;
+    cachedMongoUnitConfig = mongoUnitConfig;
 
-    return mongoUnitProperties;
+    return mongoUnitConfig;
   }
 
   /**

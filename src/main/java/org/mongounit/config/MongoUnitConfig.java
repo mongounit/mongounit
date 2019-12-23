@@ -9,9 +9,9 @@
 package org.mongounit.config;
 
 /**
- * {@link MongoUnitProperties} class is a holder for mongounit.properties property values.
+ * {@link MongoUnitConfig} class is a holder for mongounit.properties property values.
  */
-public class MongoUnitProperties {
+public class MongoUnitConfig {
 
   /**
    * Classpath-based mongounit.properties URI.
@@ -64,10 +64,10 @@ public class MongoUnitProperties {
    * the field name is to specify a BSON type value based on the naming in {@link
    * org.bson.BsonType}.
    *
-   * If the JSON is meant as an expected assertion match, 'comparator' field is expected as a
-   * sibling field name.
+   * If the JSON is meant as an expected assertion match, an optional 'comparator' field is expected
+   * as a sibling field name.
    */
-  public static final String DEFAULT_MONGO_UNIT_VALUE_INDICATOR_FIELD_NAME = "$$";
+  public static final String DEFAULT_MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR = "$$";
 
   /**
    * By default, the test database should be dropped so there is no need for manual cleanup.
@@ -98,8 +98,8 @@ public class MongoUnitProperties {
    * sibling field names. The value of the 'bsonType' field is to specify a BSON type value based on
    * the naming in {@link org.bson.BsonType}.
    *
-   * If the JSON is meant as an expected assertion match, 'comparator' field is expected as a
-   * singling fiend name.
+   * If the JSON is meant as an expected assertion match, an optional 'comparator' field is expected
+   * as a sibling field name.
    */
   private String mongoUnitValueFieldNameIndicator;
 
@@ -116,10 +116,10 @@ public class MongoUnitProperties {
   /**
    * Default constructor.
    */
-  public MongoUnitProperties() {
+  public MongoUnitConfig() {
     this.baseUri = DEFAULT_BASE_URI;
     this.baseUriKeepAsIs = DEFAULT_BASE_KEEP_URI_AS_IS;
-    this.mongoUnitValueFieldNameIndicator = DEFAULT_MONGO_UNIT_VALUE_INDICATOR_FIELD_NAME;
+    this.mongoUnitValueFieldNameIndicator = DEFAULT_MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR;
     this.dropDatabase = DEFAULT_DROP_DATABASE;
     this.timeZoneId = DEFAULT_TIME_ZONE_ID;
   }
@@ -139,7 +139,7 @@ public class MongoUnitProperties {
    * have run.
    * @param timeZoneId Time zone ID to use in the database name pad.
    */
-  public MongoUnitProperties(
+  public MongoUnitConfig(
       String baseUri,
       Boolean baseUriKeepAsIs,
       String mongoUnitValueFieldNameIndicator,
@@ -150,7 +150,7 @@ public class MongoUnitProperties {
     this.baseUriKeepAsIs = baseUriKeepAsIs == null ? DEFAULT_BASE_KEEP_URI_AS_IS : baseUriKeepAsIs;
     this.mongoUnitValueFieldNameIndicator =
         mongoUnitValueFieldNameIndicator == null ?
-            DEFAULT_MONGO_UNIT_VALUE_INDICATOR_FIELD_NAME :
+            DEFAULT_MONGO_UNIT_VALUE_FIELD_NAME_INDICATOR :
             mongoUnitValueFieldNameIndicator;
     this.dropDatabase = dropDatabase == null ? DEFAULT_DROP_DATABASE : dropDatabase;
     this.timeZoneId = timeZoneId == null ? DEFAULT_TIME_ZONE_ID : timeZoneId;

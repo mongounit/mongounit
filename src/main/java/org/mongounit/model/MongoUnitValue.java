@@ -9,18 +9,18 @@
 package org.mongounit.model;
 
 import java.util.Objects;
+import org.bson.BsonType;
 
 /**
- * {@link MongoUnitValue} class represents the fields and values represented by the special format
- * of the MongoUnit value.
+ * {@link MongoUnitValue} class represents a value with an optional comparator.
  */
 @SuppressWarnings("WeakerAccess")
 public class MongoUnitValue {
 
   /**
-   * BsonType of the MongoUnit value.
+   * Optional BsonType of the MongoUnit value.
    */
-  private String bsonType;
+  private BsonType bsonType;
 
   /**
    * Actual value.
@@ -28,9 +28,9 @@ public class MongoUnitValue {
   private Object value;
 
   /**
-   * Comparator value of the MongoUnit value.
+   * Optional comparator to use with the value.
    */
-  private String comparatorValue;
+  private String comparator;
 
   /**
    * Default constructor.
@@ -41,14 +41,14 @@ public class MongoUnitValue {
   /**
    * Constructor.
    *
-   * @param bsonType BsonType of the MongoUnit value.
+   * @param bsonType Optional BsonType of the MongoUnit value.
    * @param value Actual value.
-   * @param comparatorValue Comparator value of the MongoUnit value.
+   * @param comparator Optional comparator to use with the value.
    */
-  public MongoUnitValue(String bsonType, Object value, String comparatorValue) {
+  public MongoUnitValue(BsonType bsonType, Object value, String comparator) {
     this.bsonType = bsonType;
     this.value = value;
-    this.comparatorValue = comparatorValue;
+    this.comparator = comparator;
   }
 
   /**
@@ -61,7 +61,7 @@ public class MongoUnitValue {
   /**
    * @return BsonType of the MongoUnit value.
    */
-  public String getBsonType() {
+  public BsonType getBsonType() {
     return this.bsonType;
   }
 
@@ -75,14 +75,14 @@ public class MongoUnitValue {
   /**
    * @return Comparator value of the MongoUnit value.
    */
-  public String getComparatorValue() {
-    return this.comparatorValue;
+  public String getComparator() {
+    return this.comparator;
   }
 
   /**
    * @param bsonType BsonType of the MongoUnit value.
    */
-  public void setBsonType(String bsonType) {
+  public void setBsonType(BsonType bsonType) {
     this.bsonType = bsonType;
   }
 
@@ -94,10 +94,10 @@ public class MongoUnitValue {
   }
 
   /**
-   * @param comparatorValue Comparator value of the MongoUnit value.
+   * @param comparator Comparator value of the MongoUnit value.
    */
-  public void setComparatorValue(String comparatorValue) {
-    this.comparatorValue = comparatorValue;
+  public void setComparator(String comparator) {
+    this.comparator = comparator;
   }
 
   @Override
@@ -122,9 +122,9 @@ public class MongoUnitValue {
     if (!Objects.equals(this$value, other$value)) {
       return false;
     }
-    final Object this$comparatorValue = this.getComparatorValue();
-    final Object other$comparatorValue = other.getComparatorValue();
-    return Objects.equals(this$comparatorValue, other$comparatorValue);
+    final Object this$comparator = this.getComparator();
+    final Object other$comparator = other.getComparator();
+    return Objects.equals(this$comparator, other$comparator);
   }
 
   /**
@@ -143,7 +143,7 @@ public class MongoUnitValue {
     result = result * PRIME + ($bsonType == null ? 43 : $bsonType.hashCode());
     final Object $value = this.getValue();
     result = result * PRIME + ($value == null ? 43 : $value.hashCode());
-    final Object $comparatorValue = this.getComparatorValue();
+    final Object $comparatorValue = this.getComparator();
     result = result * PRIME + ($comparatorValue == null ? 43 : $comparatorValue.hashCode());
     return result;
   }
@@ -151,7 +151,7 @@ public class MongoUnitValue {
   @Override
   public String toString() {
     return "MongoUnitValue(bsonType=" + this.getBsonType() + ", value=" + this.getValue()
-        + ", comparatorValue=" + this.getComparatorValue() + ")";
+        + ", comparator=" + this.getComparator() + ")";
   }
 
   /**
@@ -161,9 +161,9 @@ public class MongoUnitValue {
   public static class MongoUnitValueBuilder {
 
     /**
-     * BsonType of the MongoUnit value.
+     * Optional BsonType of the MongoUnit value.
      */
-    private String bsonType;
+    private BsonType bsonType;
 
     /**
      * Actual value.
@@ -171,9 +171,9 @@ public class MongoUnitValue {
     private Object value;
 
     /**
-     * Comparator value of the MongoUnit value.
+     * Optional comparator to use with the value.
      */
-    private String comparatorValue;
+    private String comparator;
 
     /**
      * Default constructor.
@@ -182,10 +182,10 @@ public class MongoUnitValue {
     }
 
     /**
-     * @param bsonType BsonType of the MongoUnit value.
+     * @param bsonType Optional BsonType of the MongoUnit value.
      * @return Instance of this builder class.
      */
-    public MongoUnitValue.MongoUnitValueBuilder bsonType(String bsonType) {
+    public MongoUnitValue.MongoUnitValueBuilder bsonType(BsonType bsonType) {
       this.bsonType = bsonType;
       return this;
     }
@@ -200,11 +200,11 @@ public class MongoUnitValue {
     }
 
     /**
-     * @param comparatorValue Comparator value of the MongoUnit value.
+     * @param comparator Optional comparator to use with the value.
      * @return Instance of this builder class.
      */
-    public MongoUnitValue.MongoUnitValueBuilder comparatorValue(String comparatorValue) {
-      this.comparatorValue = comparatorValue;
+    public MongoUnitValue.MongoUnitValueBuilder comparator(String comparator) {
+      this.comparator = comparator;
       return this;
     }
 
@@ -212,13 +212,13 @@ public class MongoUnitValue {
      * @return New instance of the {@link MongoUnitValue} class with the previously set properties.
      */
     public MongoUnitValue build() {
-      return new MongoUnitValue(bsonType, value, comparatorValue);
+      return new MongoUnitValue(bsonType, value, comparator);
     }
 
     @Override
     public String toString() {
       return "MongoUnitValue.MongoUnitValueBuilder(bsonType=" + this.bsonType + ", value="
-          + this.value + ", comparatorValue=" + this.comparatorValue + ")";
+          + this.value + ", comparator=" + this.comparator + ")";
     }
   }
 }
