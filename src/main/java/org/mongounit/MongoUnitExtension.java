@@ -151,7 +151,7 @@ public class MongoUnitExtension implements
 
     try {
       // Seed database with this dataset
-      toDatabase(combinedDataset, mongoDatabase, mongoUnitConfig);
+      toDatabase(combinedDataset, mongoDatabase);
 
     } catch (MongoUnitException mongoUnitException) {
 
@@ -200,7 +200,7 @@ public class MongoUnitExtension implements
     AssertionResult assertionResult;
     try {
       assertionResult = MongoUnitUtil
-          .assertMatches(expectedDataset, actualDataset, mongoUnitConfig);
+          .assertMatches(expectedDataset, actualDataset);
     } catch (Exception exception) {
 
       // Log error and rethrow

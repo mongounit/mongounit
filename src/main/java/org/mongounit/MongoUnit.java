@@ -73,7 +73,7 @@ public class MongoUnit {
     // Seed database
     MongoUnitConfig mongoUnitConfig = loadMongoUnitProperties();
     MongoDatabase mongoDatabase = CURRENT_MONGO_DATABASE;
-    toDatabase(seedWithDataset, mongoDatabase, mongoUnitConfig);
+    toDatabase(seedWithDataset, mongoDatabase);
 
     return seedWithDataset;
   }
@@ -325,7 +325,7 @@ public class MongoUnit {
     AssertionResult assertionResult;
     try {
       assertionResult = MongoUnitUtil
-          .assertMatches(expectedDataset, actualDataset, mongoUnitConfig);
+          .assertMatches(expectedDataset, actualDataset);
     } catch (Exception exception) {
 
       // Log error and rethrow

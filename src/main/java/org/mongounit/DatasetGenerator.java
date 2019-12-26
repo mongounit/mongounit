@@ -106,8 +106,8 @@ public class DatasetGenerator {
 
       mongoUnitCollections = toMongoUnitCollections(
           mongoDatabase,
-          mongoUnitConfig,
-          arguments.getPreserveBsonTypes(),
+//          mongoUnitConfig,
+//          arguments.getPreserveBsonTypes(),
           arguments.getCollectionNames().toArray(new String[0]));
     } catch (IllegalArgumentException exception) {
 

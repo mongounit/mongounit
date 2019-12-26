@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -72,14 +71,14 @@ public class MongoUnitUtil {
   /**
    * Format in which a date is expected to appear in the seed or expected JSON documents.
    */
-  private static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  public static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
   /**
    * Date formatter object which formats the date in the standard MongoDb date format.
    */
-  private static final SimpleDateFormat STANDARD_MONGO_DATE_FORMAT =
+  public static final SimpleDateFormat STANDARD_MONGO_DATE_FORMAT =
       new SimpleDateFormat(DATE_STRING_FORMAT);
   /**
-   * Logger for this configuration class.
+   * Logger for this class.
    */
   private static Logger log = LoggerFactory.getLogger(MongoUnitUtil.class);
 
@@ -116,9 +115,9 @@ public class MongoUnitUtil {
       // TODO: Might have to write custom deserializer to fit it back into MongoUnitValue for all
       //  the cases since the JSON format does not break MongoUnitValue into 3 separate fields.
 
-      ObjectMapper jsonMapper = new ObjectMapper();
+      ObjectMapper objectMapper = new ObjectMapper();
 
-      return jsonMapper.readValue(
+      return objectMapper.readValue(
           jsonMongoUnitCollections,
           new TypeReference<List<MongoUnitCollection>>() {
           });
@@ -632,18 +631,22 @@ public class MongoUnitUtil {
 
         case DATE_TIME:
 
-          try {
+          return new BsonDateTime((long) rawValue);
 
-            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-            Date date = format.parse((String) rawValue);
-            return new BsonDateTime(date.getTime());
-
-          } catch (ParseException e) {
-            String message = "Date value was not in the supported format of"
-                + DATE_STRING_FORMAT + ". Tried to parse '" + rawValue + "'.";
-            log.error(message);
-            throw new MongoUnitException(message);
-          }
+        // TODO: Remove this code when complete; it was a mistake since the DATE_TIME value is
+        //     always stored as 'long' in MongoUnitValue object.
+        //          try {
+        //
+        //            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
+        //            Date date = format.parse((String) rawValue);
+        //            return new BsonDateTime(date.getTime());
+        //
+        //          } catch (ParseException e) {
+        //            String message = "Date value was not in the supported format of"
+        //                + DATE_STRING_FORMAT + ". Tried to parse '" + rawValue + "'.";
+        //            log.error(message);
+        //            throw new MongoUnitException(message);
+        //          }
 
         case NULL:
           return new BsonNull();
@@ -1144,11 +1147,11 @@ public class MongoUnitUtil {
     // Compare expected and actual
     int comparison = compare(comparableExpected, comparableActual);
 
-    // For developer assertion failure message readability, if date, format it as date
+    // For developer assertion failure message readability, if date type, format it as date
     if (expectedBsonType == BsonType.DATE_TIME) {
 
-      comparableExpected = STANDARD_MONGO_DATE_FORMAT.format(comparableExpected);
-      comparableActual = STANDARD_MONGO_DATE_FORMAT.format(comparableActual);
+      comparableExpected = STANDARD_MONGO_DATE_FORMAT.format(new Date((long) comparableExpected));
+      comparableActual = STANDARD_MONGO_DATE_FORMAT.format(new Date((long) comparableActual));
     }
 
     // Assert depending on the 'comparator' value

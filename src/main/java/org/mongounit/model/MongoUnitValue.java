@@ -13,6 +13,8 @@ import org.bson.BsonType;
 
 /**
  * {@link MongoUnitValue} class represents a value with an optional comparator.
+ *
+ * NOTE: {@link BsonType#DATE_TIME}'s value is always stored as type long.
  */
 @SuppressWarnings("WeakerAccess")
 public class MongoUnitValue {
