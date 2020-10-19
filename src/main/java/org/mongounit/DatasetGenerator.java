@@ -235,7 +235,7 @@ public class DatasetGenerator {
           collectionNames = extractListArgumentValues(argValue);
 
           // Check if any collection names left; if not, show error to user and exist with error
-          if (collectionNames.size() < 1) {
+          if (collectionNames.isEmpty()) {
 
             // Show error to user and exit with error code
             System.out.println("**** ERROR: if specifying '-collectionNames', must specify at"

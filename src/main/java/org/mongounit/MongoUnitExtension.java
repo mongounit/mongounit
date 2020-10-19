@@ -32,7 +32,7 @@ import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
@@ -91,8 +91,8 @@ public class MongoUnitExtension implements
 
     // Retrieve database instance through Spring context
     ApplicationContext springContext = SpringExtension.getApplicationContext(context);
-    MongoDbFactory mongoDbFactory = springContext.getBean(MongoDbFactory.class);
-    MongoDatabase mongoDatabase = mongoDbFactory.getDb();
+    MongoDatabaseFactory mongoDatabaseFactory = springContext.getBean(MongoDatabaseFactory.class);
+    MongoDatabase mongoDatabase = mongoDatabaseFactory.getMongoDatabase();
 
     // Cache the database for this run in case manual seeding and assertion is done
     CURRENT_MONGO_DATABASE = mongoDatabase;

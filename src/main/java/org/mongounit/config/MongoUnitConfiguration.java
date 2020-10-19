@@ -38,8 +38,8 @@ public class MongoUnitConfiguration {
    * execution.
    */
   @Bean
-  public static MongoDbGuardConfiguration createDatabaseGuardConfiguration() {
-    return new MongoDbGuardConfiguration();
+  public static MongoDatabaseGuardConfiguration createDatabaseGuardConfiguration() {
+    return new MongoDatabaseGuardConfiguration();
   }
 
   /**

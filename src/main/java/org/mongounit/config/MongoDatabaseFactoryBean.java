@@ -13,15 +13,15 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 
 /**
- * {@link MongoDbFactoryBean} class is a definition of the MongoUnit specific {@link MongoDbFactory}
+ * {@link MongoDatabaseFactoryBean} class is a definition of the MongoUnit specific {@link MongoDatabaseFactory}
  * bean to be substituted for originally configured one in the Spring context.
  */
-public class MongoDbFactoryBean
-    implements FactoryBean<MongoDbFactory>, EnvironmentAware, InitializingBean {
+public class MongoDatabaseFactoryBean
+    implements FactoryBean<MongoDatabaseFactory>, EnvironmentAware, InitializingBean {
 
   /**
    * Spring environment.
@@ -34,15 +34,15 @@ public class MongoDbFactoryBean
   private MongoClientURI mongoClientURI;
 
   @Override
-  public MongoDbFactory getObject() {
+  public MongoDatabaseFactory getObject() {
 
     // Create new factory based on the calculated URI
-    return new SimpleMongoClientDbFactory(mongoClientURI.getURI());
+    return new SimpleMongoClientDatabaseFactory(mongoClientURI.getURI());
   }
 
   @Override
   public Class<?> getObjectType() {
-    return MongoDbFactory.class;
+    return MongoDatabaseFactory.class;
   }
 
   @Override
