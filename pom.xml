@@ -67,6 +67,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-json</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongodb-driver-legacy</artifactId>
+      <version>4.0.5</version>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
