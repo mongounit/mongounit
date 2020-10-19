@@ -29,7 +29,7 @@ public class MongoDatabaseFactoryBean
   private Environment environment;
 
   /**
-   * Mongo client URI to use for the new MongoDbFactory bean.
+   * Mongo client URI to use for the new MongoDatabaseFactoryBean bean.
    */
   private MongoClientURI mongoClientURI;
 
