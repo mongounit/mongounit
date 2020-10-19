@@ -20,7 +20,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 
 /**
  * {@link MongoUnitTest} is an annotation meant to be placed on JUnit classes to autoconfigure the
- * Spring-based MongoDbFactory to use a test database for the integration tests.
+ * Spring-based MongoDatabaseFactory to use a test database for the integration tests.
  * <p>
  * Placing this annotation on a test class automatically triggers the MongoUnit framework to look
  * for them as system properties or to look for the 'mongounit.properties' file at the root of the
