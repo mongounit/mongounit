@@ -54,6 +54,7 @@ import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.mongounit.model.AssertionResult;
+import org.mongounit.model.InternalMongoUnitCollection;
 import org.mongounit.model.MongoUnitAnnotations;
 import org.mongounit.model.MongoUnitCollection;
 import org.mongounit.model.MongoUnitDatasets;
@@ -106,27 +107,57 @@ public class MongoUnitUtil {
    * @throws MongoUnitException If the provided 'jsonMongoUnitCollections' can not be interpreted to
    * match the list of {@link MongoUnitCollection}s.
    */
-  @SuppressWarnings("WeakerAccess")
   public static List<MongoUnitCollection> toMongoUnitTypedCollectionsFromJson(
       String jsonMongoUnitCollections) throws MongoUnitException {
 
     try {
 
-      // TODO: Might have to write custom deserializer to fit it back into MongoUnitValue for all
-      //  the cases since the JSON format does not break MongoUnitValue into 3 separate fields.
-
       ObjectMapper objectMapper = new ObjectMapper();
-
-      return objectMapper.readValue(
+      List<InternalMongoUnitCollection> internalMongoUnitCollections = objectMapper.readValue(
           jsonMongoUnitCollections,
-          new TypeReference<List<MongoUnitCollection>>() {
+          new TypeReference<List<InternalMongoUnitCollection>>() {
           });
+
+      return convertToMongoUnitCollections(internalMongoUnitCollections);
+
     } catch (IOException exception) {
 
       String message = "Unable to interpret JSON dataset. " + exception.getMessage();
       log.error(message);
       throw new MongoUnitException(message, exception);
     }
+  }
+
+  /**
+   * @param internalMongoUnitCollections MongoUnit collections represented by its internal object
+   * model which is more suitable for JSON deserialization.
+   * @return List of {@link MongoUnitCollection}s converted from the internal representation.
+   */
+  private static List<MongoUnitCollection> convertToMongoUnitCollections(
+      List<InternalMongoUnitCollection> internalMongoUnitCollections) {
+
+    // Convert one collection at a time
+    List<MongoUnitCollection> mongoUnitCollections = new ArrayList<>();
+    for (InternalMongoUnitCollection internalMongoUnitCollection : internalMongoUnitCollections) {
+      // Add converted collection by converting each document
+      mongoUnitCollections.add(MongoUnitCollection.builder()
+          .collectionName(internalMongoUnitCollection.getCollectionName())
+          .documents(convertToMongoUnitDocuments(internalMongoUnitCollection.getDocuments()))
+          .build());
+    }
+
+    return mongoUnitCollections;
+  }
+
+  private static List<Map<String, MongoUnitValue>> convertToMongoUnitDocuments(
+      List<Map<String, Object>> documents) {
+
+    List<Map<String, MongoUnitValue>> convertedDocuments = new ArrayList<>();
+    for (Map<String, Object> document: documents) {
+
+    }
+
+    return null;
   }
 
   /**
@@ -1824,7 +1855,9 @@ public class MongoUnitUtil {
 
       String dataset =
           retrieveResourceFromFile(fileLocation, locationType, relativePackageClass, testClassName);
-      List<MongoUnitCollection> mongoUnitCollections = toMongoUnitTypedCollectionsFromJson(dataset);
+      // TODO: fix this
+      //      List<MongoUnitCollection> mongoUnitCollections = toMongoUnitTypedCollectionsFromJson(dataset);
+      List<MongoUnitCollection> mongoUnitCollections = null;
 
       finalMongoUnitCollectionDataset.addAll(mongoUnitCollections);
     }
@@ -1887,7 +1920,9 @@ public class MongoUnitUtil {
     for (String fileLocation : fileLocations) {
       String dataset =
           retrieveResourceFromFile(fileLocation, locationType, relativePackageClass, testClassName);
+      // TODO: fix this
       List<MongoUnitCollection> mongoUnitCollections = toMongoUnitTypedCollectionsFromJson(dataset);
+      //      List<MongoUnitCollection> mongoUnitCollections = null;
 
       finalMongoUnitCollectionDataset.addAll(mongoUnitCollections);
     }

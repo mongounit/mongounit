@@ -1,0 +1,63 @@
+[
+  {
+    "collectionName": "positions",
+    "documents": [
+      {
+        "positionName": "Builder",
+        "created": {
+          "$$DATE_TIME": "2019-10-28T16:26:10.247Z",
+          "comparator": "<"
+        },
+        "updated": {
+          "$$DATE_TIME": "2019-10-28T16:26:10.247Z",
+          "comparator": "<"
+        },
+        "inner": {
+          "doc1": {
+            "name": "Yaakov"
+          },
+          "doc2": {
+            "name": "Bob",
+            "updated": {
+              "$$DATE_TIME": "2019-10-28T16:26:10.247Z",
+              "comparator": "<"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "collectionName": "people",
+    "documents": [
+      {
+        "favColors": [
+          "red",
+          "green"
+        ],
+        "my-number": 123456789,
+        "address": {
+          "zipcode": 12345,
+          "street": "12 Builder St."
+        },
+        "positionId": {
+          "$$": null,
+          "comparator": "!="
+        },
+        "anotherPositionId": {
+          "$$": "Hello world",
+          "comparator": "!="
+        },
+        "name": "Bob The Builder",
+        "created": {
+          "$$DATE_TIME": "2019-10-28T16:26:10.247Z",
+          "comparator": "<"
+        },
+        "updated": {
+          "$$DATE_TIME": "2019-10-28T16:26:10.247Z",
+          "comparator": "<"
+        }
+      }
+    ]
+  }
+]
