@@ -35,7 +35,7 @@ You can now rename/edit and place the `output.json` into your source tree.
 If you run the same command without giving it any arguments, it will report and error and will list all of the available options:
 
 ```bash
-$ java -jar mongounit-1.0.0-jar-with-dependencies.jar 
+$ java -jar mongounit-2.0.0-jar-with-dependencies.jar 
 **** ERROR: -dbUri must be specified.
 **************************
 * Usage: 
