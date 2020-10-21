@@ -17,19 +17,19 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.util.ObjectUtils;
 
 /**
- * {@link MongoDbGuardConfiguration} configuration is a bean definition registry post processor that
- * substitutes a custom {@link MongoDbFactory} that modifies the database URI.
+ * {@link MongoDatabaseGuardConfiguration} configuration is a bean definition registry post processor that
+ * substitutes a custom {@link MongoDatabaseFactory} that modifies the database URI.
  */
-public class MongoDbGuardConfiguration implements BeanDefinitionRegistryPostProcessor {
+public class MongoDatabaseGuardConfiguration implements BeanDefinitionRegistryPostProcessor {
 
   /**
    * Logger for this configuration class.
    */
-  private static Logger log = LoggerFactory.getLogger(MongoDbGuardConfiguration.class);
+  private static Logger log = LoggerFactory.getLogger(MongoDatabaseGuardConfiguration.class);
 
   @Override
   public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry)
@@ -45,7 +45,7 @@ public class MongoDbGuardConfiguration implements BeanDefinitionRegistryPostProc
   }
 
   /**
-   * Substitutes {@link MongoDbFactory} bean int the registry.
+   * Substitutes {@link MongoDatabaseFactory} bean int the registry.
    *
    * @param registry Bean registry to substitute the bean in.
    * @param beanFactory Factory to create the bean that will substitute existing one.
@@ -54,32 +54,32 @@ public class MongoDbGuardConfiguration implements BeanDefinitionRegistryPostProc
       BeanDefinitionRegistry registry,
       ConfigurableListableBeanFactory beanFactory) {
 
-    // Retrieve existing MongoDbFactory bean
-    BeanDefinitionHolder holder = getMongoDbFactoryBeanDefinition(beanFactory);
+    // Retrieve existing MongoDatabaseFactory bean
+    BeanDefinitionHolder holder = getMongoDatabaseFactoryBeanDefinition(beanFactory);
 
     if (holder != null) {
       String beanName = holder.getBeanName();
       boolean primary = holder.getBeanDefinition().isPrimary();
 
-      log.info("Replacing '" + beanName + "' MongoDbFactory bean with "
+      log.info("Replacing '" + beanName + "' MongoDatabaseFactory bean with "
           + (primary ? "primary " : "") + "MongoUnit version");
       registry.removeBeanDefinition(beanName);
-      registry.registerBeanDefinition(beanName, createMongoDbFactoryBeanDefinition(primary));
+      registry.registerBeanDefinition(beanName, createMongoDatabaseFactoryBeanDefinition(primary));
     }
   }
 
   /**
    * @param beanFactory Bean factory where to retrieve the existing bean definition for the {@link
-   * MongoDbFactory}.
-   * @return Bean definition holder of the existing {@link MongoDbFactory} in the registry.
+   * MongoDatabaseFactory}.
+   * @return Bean definition holder of the existing {@link MongoDatabaseFactory} in the registry.
    */
-  private BeanDefinitionHolder getMongoDbFactoryBeanDefinition(
+  private BeanDefinitionHolder getMongoDatabaseFactoryBeanDefinition(
       ConfigurableListableBeanFactory beanFactory) {
 
-    String[] beanNames = beanFactory.getBeanNamesForType(MongoDbFactory.class);
+    String[] beanNames = beanFactory.getBeanNamesForType(MongoDatabaseFactory.class);
 
     if (ObjectUtils.isEmpty(beanNames)) {
-      log.info("No MongoDbFactory beans found.");
+      log.info("No MongoDatabaseFactory beans found.");
       return null;
     }
 
@@ -96,17 +96,17 @@ public class MongoDbGuardConfiguration implements BeanDefinitionRegistryPostProc
       }
     }
 
-    log.info("No primary MongoDbFactory found.");
+    log.info("No primary MongoDatabaseFactory found.");
     return null;
   }
 
   /**
    * @param primary Flag to indicate if the bean should be set as primary.
-   * @return Bean definition to replace the existing {@link MongoDbFactory} bean with.
+   * @return Bean definition to replace the existing {@link MongoDatabaseFactory} bean with.
    */
-  private BeanDefinition createMongoDbFactoryBeanDefinition(boolean primary) {
+  private BeanDefinition createMongoDatabaseFactoryBeanDefinition(boolean primary) {
 
-    BeanDefinition beanDefinition = new RootBeanDefinition(MongoDbFactoryBean.class);
+    BeanDefinition beanDefinition = new RootBeanDefinition(MongoDatabaseFactoryBean.class);
     beanDefinition.setPrimary(primary);
     return beanDefinition;
   }

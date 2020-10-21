@@ -134,7 +134,7 @@ public class MongoUnitConfigurationUtil {
     // Create client URI to extract db name only
     String newClientUri = baseUri.replaceFirst(baseUriDbName, newDbName);
 
-    log.info("Using test database with URI: '" + newClientUri + "'.");
+    log.info("Using test database with URI: '{}'.", newClientUri);
 
     return new MongoClientURI(newClientUri);
   }
