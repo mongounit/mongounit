@@ -15,7 +15,7 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 <dependency>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>1.1.0</version>
+  <version>2.0.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -25,6 +25,10 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 Be sure to include `<scope>test</scope>` so **mongoUnit** only shows up in your *test* classpath.
 
 See a complete example of [`pom.xml`](https://github.com/mongounit/mongounit-demo2/blob/master/pom.xml).
+
+### Older versions of Spring Boot
+
+For Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.
 
 ## Annotate the test class with @MongoUnitTest
 
@@ -86,14 +90,14 @@ Note that both paths start with a `/`, which signifies the classpath root.
 
 The usual process is for you to populate the database (either with some tool or by running a single test), inspect the database to verify it's close to the state you want and then run the **mongoUnit** provided utility to generate the JSON file representing the entire database.
 
-You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/1.0.0/mongounit-1.0.0-jar-with-dependencies.jar) from maven central. 
+You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/2.0.0/mongounit-2.0.0-jar-with-dependencies.jar) from maven central. 
 
 For all of its available options see [Dataset Generator](https://mongounit.org/dataset-generator-utility.html) section.
 
 To use it with its minimal customizations:
 
 ```bash
-$ java -jar mongounit-1.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-2.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json
