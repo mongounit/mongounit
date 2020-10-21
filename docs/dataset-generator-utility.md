@@ -9,7 +9,7 @@ While it's possible to generate the seeding and assertion JSON files by hand, it
 
 The dataset generator utility is a just a JAR that you can run inside of an IDE or on the command line.
 
-[Download the mongoUnit JSON generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/1.0.0/mongounit-1.0.0-jar-with-dependencies.jar).
+[Download the mongoUnit JSON generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/2.0.0/mongounit-2.0.0-jar-with-dependencies.jar).
 
 ## Process
 
@@ -22,7 +22,7 @@ The data doesn't have to be perfect. As long as the bulk of it is the way you wa
 ### Step 2: Run the following command:
 
 ```bash
-$ java -jar mongounit-1.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-2.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json
@@ -35,7 +35,7 @@ You can now rename/edit and place the `output.json` into your source tree.
 If you run the same command without giving it any arguments, it will report and error and will list all of the available options:
 
 ```bash
-$ java -jar mongounit-1.0.0-jar-with-dependencies.jar 
+$ java -jar mongounit-2.0.0-jar-with-dependencies.jar 
 **** ERROR: -dbUri must be specified.
 **************************
 * Usage: 
