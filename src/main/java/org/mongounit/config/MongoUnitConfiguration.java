@@ -8,7 +8,6 @@
  */
 package org.mongounit.config;
 
-import com.mongodb.MongoClientURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.Lifecycle;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,8 +37,8 @@ public class MongoUnitConfiguration {
    * execution.
    */
   @Bean
-  public static MongoDbGuardConfiguration createDatabaseGuardConfiguration() {
-    return new MongoDbGuardConfiguration();
+  public static MongoDatabaseGuardConfiguration createDatabaseGuardConfiguration() {
+    return new MongoDatabaseGuardConfiguration();
   }
 
   /**
@@ -66,16 +65,16 @@ public class MongoUnitConfiguration {
       // Load mongo properties
       MongoUnitProperties mongoProperties = MongoUnitConfigurationUtil.loadMongoUnitProperties();
 
-      MongoDbFactory mongoDbFactory = applicationContext.getBean(MongoDbFactory.class);
+      MongoDatabaseFactory mongoDatabaseFactory = applicationContext.getBean(MongoDatabaseFactory.class);
 
       // Drop database if not disabled
       if (mongoProperties.isDropDatabase()) {
 
-        log.info("Dropping test database '" + mongoDbFactory.getDb().getName() + "'.");
-        mongoDbFactory.getDb().drop();
+        log.info("Dropping test database '" + mongoDatabaseFactory.getMongoDatabase().getName() + "'.");
+        mongoDatabaseFactory.getMongoDatabase().drop();
       } else {
 
-        log.info("Test database '" + mongoDbFactory.getDb().getName() + "' is NOT dropped. Manual"
+        log.info("Test database '" + mongoDatabaseFactory.getMongoDatabase().getName() + "' is NOT dropped. Manual"
             + " cleanup is necessary to remove it.");
       }
     }
