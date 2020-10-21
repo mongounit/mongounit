@@ -22,7 +22,7 @@ If you are using Spring Boot version 2.3+, you must use the latest mongoUnit `2.
 </dependency>
 ```
 
-If you are using earlier versions of Spring Boot, you must use mongoUnit `1.1`. In your `pom.xml`, you would have the following:
+If you are using earlier versions of Spring Boot, you must use mongoUnit `1.1.0`. In your `pom.xml`, you would have the following:
 ```
 <dependency>
    <groupId>org.mongounit</groupId>
