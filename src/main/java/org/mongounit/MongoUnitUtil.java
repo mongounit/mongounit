@@ -67,7 +67,7 @@ public class MongoUnitUtil {
   /**
    * Logger for this configuration class.
    */
-  private static Logger log = LoggerFactory.getLogger(MongoUnitUtil.class);
+  private static final Logger log = LoggerFactory.getLogger(MongoUnitUtil.class);
 
   /**
    * Field name to use when extracting the comparator field out of a special document which
@@ -841,7 +841,7 @@ public class MongoUnitUtil {
           return toBsonDocument((Map<String, Object>) value, mongoUnitProperties);
 
         case "DOUBLE":
-          return new BsonDouble((double) value);
+          return new BsonDouble(Double.parseDouble(value + ""));
 
         case "STRING":
           return new BsonString((String) value);
@@ -895,16 +895,16 @@ public class MongoUnitUtil {
           return new BsonSymbol((String) value);
 
         case "INT32":
-          return new BsonInt32((int) value);
+          return new BsonInt32(Integer.parseInt(value + ""));
 
         case "TIMESTAMP":
-          return new BsonTimestamp((long) value);
+          return new BsonTimestamp(Long.parseLong(value + ""));
 
         case "INT64":
-          return new BsonInt64((long) value);
+          return new BsonInt64(Long.parseLong(value + ""));
 
         case "DECIMAL128":
-          return new BsonDecimal128(new Decimal128(new BigDecimal((double) value)));
+          return new BsonDecimal128(new Decimal128(BigDecimal.valueOf(Double.parseDouble(value + ""))));
 
         // END_OF_DOCUMENT, MIN_KEY, MAX_KEY
         default:
@@ -1255,6 +1255,7 @@ public class MongoUnitUtil {
       }
 
       // Assert lists match
+      //noinspection rawtypes
       return assertMatch(
           (List) expectedValue,
           (List) actualValue,
@@ -1263,6 +1264,7 @@ public class MongoUnitUtil {
     } else { // Anything other than Map or List
 
       // Try to cast expected
+      //noinspection rawtypes
       Comparable comparableExpected = expectedToComparable(expectedValue, null);
 
       // Assert that actual is also not a Map or a List; if not, cast to Comparable
@@ -1271,6 +1273,7 @@ public class MongoUnitUtil {
         return new AssertionResult(false, message);
       }
 
+      //noinspection rawtypes
       Comparable comparableActual = actualToComparable(actualValue);
 
       // Compare expected and actual
@@ -1294,6 +1297,7 @@ public class MongoUnitUtil {
    * @return An {@link AssertionResult} with a 'match' of 'true' if the provided 'expectedList' and
    * 'actualList' match according to the MongoUnit framework rules, or with 'false' otherwise.
    */
+  @SuppressWarnings("rawtypes")
   private static AssertionResult assertMatch(
       List expectedList,
       List actualList,
@@ -1352,6 +1356,7 @@ public class MongoUnitUtil {
    * @throws MongoUnitException If the developer specified expected value appears not to be of type
    * {@link Comparable} and therefore not supported.
    */
+  @SuppressWarnings("rawtypes")
   public static AssertionResult assertMatchesMongoUnitValue(
       Map<String, Object> expectedMongoUnitValue,
       Object actualValue,
@@ -1475,7 +1480,7 @@ public class MongoUnitUtil {
    * @return A negative integer, zero, or a positive integer as the expected is less than, equal to,
    * or greater than the actual.
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public static int compare(Comparable expected, Comparable actual) {
 
     // Treat expected = null, actual != null as expected < actual
@@ -1502,6 +1507,7 @@ public class MongoUnitUtil {
    * @throws MongoUnitException If such a cast is not possible due to the underlying type of the
    * provided 'actualValue'.
    */
+  @SuppressWarnings("rawtypes")
   private static Comparable actualToComparable(Object actualValue)
       throws MongoUnitException {
 
@@ -1525,6 +1531,7 @@ public class MongoUnitUtil {
    * @throws MongoUnitException If such a cast is not possible due to the underlying type of the
    * provided 'expectedValue'.
    */
+  @SuppressWarnings("rawtypes")
   private static Comparable expectedToComparable(Object expectedValue, String bsonType)
       throws MongoUnitException {
 
@@ -1543,8 +1550,17 @@ public class MongoUnitUtil {
       switch (bsonType.trim()) {
 
         // Cases where return is as is because it's already Comparable
-        case "":
+
         case "DOUBLE":
+          return Double.parseDouble(expectedValue + "");
+        case "INT32":
+          return Integer.parseInt(expectedValue + "");
+        case "TIMESTAMP":
+        case "INT64":
+          return Long.parseLong(expectedValue + "");
+        case "DECIMAL128":
+          return BigDecimal.valueOf(Double.parseDouble(expectedValue + ""));
+        case "":
         case "STRING":
         case "OBJECT_ID":
         case "BOOLEAN":
@@ -1555,10 +1571,7 @@ public class MongoUnitUtil {
         case "JAVASCRIPT":
         case "SYMBOL":
         case "JAVASCRIPT_WITH_SCOPE":
-        case "INT32":
-        case "TIMESTAMP":
-        case "INT64":
-        case "DECIMAL128":
+
 
           return (Comparable) expectedValue;
 
@@ -1592,7 +1605,6 @@ public class MongoUnitUtil {
               + " Comparable. Its type appears to be '" + expectedValue.getClass().getTypeName()
               + "'.";
 
-      //noinspection ConstantConditions (IntelliJ inspection bug)
       if (bsonType != null && !bsonType.equals("")) {
         message += " Expected value's BSON type was specified to be '" + bsonType + "'.";
       }
