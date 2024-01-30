@@ -24,7 +24,7 @@ If you want to see a working (demo) project that uses **mongoUnit**, take a look
 Here is an example of a test class from [mongounit-demo2](https://github.com/mongounit/mongounit-demo2). Take a look for yourself as to how easy it is:
 
 ```java
-package org.mongounit.demo.dao.mongo;
+package org.mongounit.demo.dao.mongo; 
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
