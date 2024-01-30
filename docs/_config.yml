@@ -18,7 +18,7 @@ aux_links:
 heading_anchors: true
 
 # Footer content appears at the bottom of every page's main content
-footer_content: "Copyright &copy; 2019 Yaakov Chaikin. Distributed by an <a href=\"https://github.com/mongounit/mongounit/blob/master/LICENSE\">Apache License 2.0.</a>"
+footer_content: "Copyright &copy; 2024 Yaakov Chaikin. Distributed by an <a href=\"https://github.com/mongounit/mongounit/blob/master/LICENSE\">Apache License 2.0.</a>"
 
 # Google Analytics Tracking (optional)
 # e.g, UA-1234567-89
