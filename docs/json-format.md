@@ -145,7 +145,7 @@ For example:
 As you can see, when you need to specify the Bson type or how to compare the expected to the actual value, there is a special syntax.
 
 The following assertion format specification:
-
+ 
 ```json
 "fieldName": {
   "$$BSON_TYPE": value,
@@ -163,7 +163,7 @@ For example:
   "comparator": "<"
 }
 ```
-
+ 
 The above is read: "Assert that `2019-10-28T17:05:36.132Z < actual value`".
 
 The configurable `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
