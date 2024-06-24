@@ -14,22 +14,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonBoolean;
@@ -62,6 +46,21 @@ import org.mongounit.model.MongoUnitValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class MongoUnitUtil {
 
   /**
@@ -74,11 +73,6 @@ public class MongoUnitUtil {
    * represents a MongoUnit value.
    */
   public static final String COMPARATOR_FIELD_NAME = "comparator";
-
-  /**
-   * Format in which a date is expected to appear in the seed or expected JSON documents.
-   */
-  private static final String DATE_STRING_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
   /**
    * Returns a list of {@link MongoUnitCollection}s that represents the dataset stored in the
@@ -439,13 +433,9 @@ public class MongoUnitUtil {
         return bsonValue.asBoolean().getValue();
 
       case DATE_TIME:
-        // Preserve DATE_TIME BSON type?
         if (preserveBsonTypesMap.containsKey("DATE_TIME")) {
-
-          SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-          String dateValue = format.format(new Date(bsonValue.asDateTime().getValue()));
-
-          return generateMongoUnitValueDocument(fieldNameIndicator, "DATE_TIME", dateValue);
+          Instant instant = Instant.ofEpochMilli(bsonValue.asDateTime().getValue());
+          return generateMongoUnitValueDocument(fieldNameIndicator, "DATE_TIME", instant);
         }
 
         return bsonValue.asDateTime().getValue();
@@ -852,19 +842,8 @@ public class MongoUnitUtil {
           return new BsonBoolean((boolean) value);
 
         case "DATE_TIME":
-
-          try {
-
-            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-            Date date = format.parse((String) value);
-            return new BsonDateTime(date.getTime());
-
-          } catch (ParseException e) {
-            String message = "Date value was not in the supported format of"
-                + DATE_STRING_FORMAT + ". Tried to parse '" + value + "'.";
-            log.error(message);
-            throw new MongoUnitException(message);
-          }
+            Instant instant = Instant.parse(String.valueOf(value));
+            return new BsonDateTime(instant.toEpochMilli());
 
         case "NULL":
           return new BsonNull();
@@ -1571,21 +1550,9 @@ public class MongoUnitUtil {
           return (Comparable) expectedValue;
 
         case "DATE_TIME":
+            Instant instant = Instant.parse(String.valueOf(expectedValue));
+            return instant.toEpochMilli();
 
-          try {
-
-            SimpleDateFormat format = new SimpleDateFormat(DATE_STRING_FORMAT);
-            Date date = format.parse((String) expectedValue);
-            return date.getTime();
-
-          } catch (ParseException e) {
-            String message = "Date value was not in the supported format of "
-                + DATE_STRING_FORMAT + ". Tried to parse '" + expectedValue + "'.";
-            log.error(message);
-            throw new MongoUnitException(message);
-          }
-
-          // END_OF_DOCUMENT, MIN_KEY, MAX_KEY, DB_POINTER:
         default:
           String message = "BSON type " + bsonType + " is not currently supported by"
               + " the MongoUnit framework.";
