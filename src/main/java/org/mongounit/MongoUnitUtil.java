@@ -176,12 +176,11 @@ public class MongoUnitUtil {
   public static void dropAllCollectionsInDatabase(MongoDatabase mongoDatabase) {
 
     // Iterate over all collections in the db and drop them
-    for (String collectionName : mongoDatabase.listCollectionNames()) {
-
+    mongoDatabase.listCollectionNames().forEach(collectionName -> {
       mongoDatabase.getCollection(collectionName).drop();
 
       log.trace("Dropped collection " + collectionName);
-    }
+    });
   }
 
   /**
@@ -261,13 +260,9 @@ public class MongoUnitUtil {
    */
   private static List<String> getCollectionNames(MongoDatabase mongoDatabase) {
 
-    List<String> collectionNames = new ArrayList<>();
-
     // Retrieve collection names from db
-    for (String collectionName : mongoDatabase.listCollectionNames()) {
-      collectionNames.add(collectionName);
-    }
-
+    List<String> collectionNames = new ArrayList<>();
+    mongoDatabase.listCollectionNames().forEach(collectionNames::add);
     return collectionNames;
   }
 

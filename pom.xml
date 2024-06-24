@@ -44,10 +44,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>8</java.version>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
-    <spring.version>2.3.4.RELEASE</spring.version>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <spring.version>3.3.0</spring.version>
   </properties>
 
   <dependencies>
@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.mongodb</groupId>
       <artifactId>mongodb-driver-legacy</artifactId>
-      <version>4.0.5</version>
+      <version>5.0.1</version>
     </dependency>
   </dependencies>
 
