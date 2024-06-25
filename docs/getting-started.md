@@ -15,7 +15,7 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 <dependency>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>2.0.1</version>
+  <version>3.0.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -28,7 +28,7 @@ See a complete example of [`pom.xml`](https://github.com/mongounit/mongounit-dem
 
 ### Older versions of Spring Boot
 
-For Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.
+For Spring Boot version 3.x and above use mongoUnit 3.0.0, for Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.
 
 ## Annotate the test class with @MongoUnitTest
 
@@ -97,7 +97,7 @@ For all of its available options see [Dataset Generator](https://mongounit.org/d
 To use it with its minimal customizations:
 
 ```bash
-$ java -jar mongounit-2.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-3.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json

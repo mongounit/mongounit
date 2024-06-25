@@ -15,14 +15,14 @@ The dataset generator utility is a just a JAR that you can run inside of an IDE 
 
 ### Step 1: Populate the database with some data.
 
-You can do this by running your code and then examining the database (either on the command line or with a tool like [Robo 3T](https://robomongo.org/) ).
+You can do this by running your code and then examining the database (either on the command line or with a tool like [MongoDB Compass](https://www.mongodb.com/products/tools/compass) ).
 
 The data doesn't have to be perfect. As long as the bulk of it is the way you want it, you can edit some of the details later by hand.
 
 ### Step 2: Run the following command:
 
 ```bash
-$ java -jar mongounit-2.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-3.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json
