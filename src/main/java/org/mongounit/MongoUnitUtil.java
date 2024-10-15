@@ -14,6 +14,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import java.util.UUID;
 import org.bson.BsonArray;
 import org.bson.BsonBinary;
 import org.bson.BsonBoolean;
@@ -399,6 +400,19 @@ public class MongoUnitUtil {
         return bsonValue.asString().getValue();
 
       case BINARY:
+        // Check if the binary data represents a UUID (16 bytes)
+        if (bsonValue.asBinary().getData().length == 16) {
+          UUID uuid = UUID.nameUUIDFromBytes(bsonValue.asBinary().getData());
+          // Preserve UUID BSON type?
+          if (preserveBsonTypesMap.containsKey("UUID")) {
+            return generateMongoUnitValueDocument(
+                fieldNameIndicator,
+                "UUID",
+                uuid.toString());
+          }
+          return uuid.toString();
+        }
+
         // Preserve BINARY BSON type?
         if (preserveBsonTypesMap.containsKey("BINARY")) {
           return generateMongoUnitValueDocument(
@@ -834,6 +848,10 @@ public class MongoUnitUtil {
         case "BINARY":
           // Decode using Base64 encoding
           return new BsonBinary(Base64.getDecoder().decode((String) value));
+
+        case "UUID":
+          // Interpret Binary as UUID
+          return new BsonBinary(UUID.fromString((String) value));
 
         case "OBJECT_ID":
           return new BsonObjectId(new ObjectId((String) value));
@@ -1539,6 +1557,7 @@ public class MongoUnitUtil {
         case "OBJECT_ID":
         case "BOOLEAN":
         case "BINARY":
+        case "UUID":
         case "NULL":
         case "UNDEFINED":
         case "REGULAR_EXPRESSION":
