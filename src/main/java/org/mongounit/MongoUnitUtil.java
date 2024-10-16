@@ -25,6 +25,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
 import org.bson.BsonInt64;
+import org.bson.BsonInvalidOperationException;
 import org.bson.BsonJavaScript;
 import org.bson.BsonNull;
 import org.bson.BsonObjectId;
@@ -400,17 +401,19 @@ public class MongoUnitUtil {
         return bsonValue.asString().getValue();
 
       case BINARY:
-        // Check if the binary data represents a UUID (16 bytes)
-        if (bsonValue.asBinary().getData().length == 16) {
-          UUID uuid = UUID.nameUUIDFromBytes(bsonValue.asBinary().getData());
+        // Check if the binary data represents a UUID
+        try {
+          UUID potentialUUID = bsonValue.asBinary().asUuid();
           // Preserve UUID BSON type?
           if (preserveBsonTypesMap.containsKey("UUID")) {
             return generateMongoUnitValueDocument(
                 fieldNameIndicator,
                 "UUID",
-                uuid.toString());
+                potentialUUID.toString());
           }
-          return uuid.toString();
+          return potentialUUID.toString();
+        } catch (BsonInvalidOperationException e) {
+          // Not a UUID, do nothing and proceed
         }
 
         // Preserve BINARY BSON type?
