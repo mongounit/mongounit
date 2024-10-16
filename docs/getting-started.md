@@ -90,7 +90,7 @@ Note that both paths start with a `/`, which signifies the classpath root.
 
 The usual process is for you to populate the database (either with some tool or by running a single test), inspect the database to verify it's close to the state you want and then run the **mongoUnit** provided utility to generate the JSON file representing the entire database.
 
-You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/2.0.0/mongounit-2.0.0-jar-with-dependencies.jar) from maven central. 
+You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/3.0.0/mongounit-3.0.0-jar-with-dependencies.jar) from maven central. 
 
 For all of its available options see [Dataset Generator](https://mongounit.org/dataset-generator-utility.html) section.
 
