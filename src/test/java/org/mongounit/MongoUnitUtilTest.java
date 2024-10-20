@@ -30,11 +30,15 @@ import static org.mongounit.MongoUnitUtil.retrieveDatasetFromLocations;
 import static org.mongounit.MongoUnitUtil.retrieveResourceFromFile;
 
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
 import org.bson.BsonObjectId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -824,6 +828,55 @@ class MongoUnitUtilTest {
 
     String testClassNamePath = getTestClassNamePath(AnnotatedTestClass.class);
     assertEquals("/org/mongounit/test", testClassNamePath);
+  }
+
+  @Test
+  @DisplayName("generateUUIDMongoUnitValueDocument")
+  void testGenerateUUIDMongoUnitValueDocument() {
+
+    UUID uuid = UUID.randomUUID();
+    ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[16]);
+    byteBuffer.putLong(uuid.getMostSignificantBits());
+    byteBuffer.putLong(uuid.getLeastSignificantBits());
+    byte[] uuidBytes = byteBuffer.array();
+    BsonBinary binaryUUID = new BsonBinary(BsonBinarySubType.UUID_STANDARD, uuidBytes);
+
+    Map<String, Object> value = generateMongoUnitValueDocument("$$", "UUID",
+        binaryUUID.asUuid().toString());
+
+    assertEquals(16, binaryUUID.getData().length, "UUID should be 16 bytes long.");
+    assertEquals(uuid, binaryUUID.asUuid(), "UUID after conversion should be the same.");
+    assertEquals(
+        uuid.toString(),
+        value.get("$$UUID"),
+        "Map should have UUID value under correct key.");
+
+  }
+
+  @Test
+  @DisplayName("convertUUIDStringToBsonBinarySuccess")
+  void testConvertBsonBinaryFromUUIDStringSuccess() {
+
+    UUID uuid = UUID.randomUUID();
+    Object value = uuid.toString();
+
+    BsonBinary bsonBinary = new BsonBinary(UUID.fromString((String) value));
+
+    assertEquals(uuid.toString(), bsonBinary.asUuid().toString(),
+        "UUID after conversion should be the same.");
+
+  }
+
+  @Test
+  @DisplayName("convertUUIDStringToBsonBinaryFailure")
+  void testConvertBsonBinaryFromUUIDStringFailure() {
+
+    Object value = "a non UUID string";
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new BsonBinary(UUID.fromString((String) value)),
+        "Should throw exception when trying to convert non UUID string to BsonBinary.");
   }
 }
 
