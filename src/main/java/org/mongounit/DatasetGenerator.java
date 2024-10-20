@@ -13,6 +13,7 @@ import static org.mongounit.config.MongoUnitProperties.DEFAULT_MONGO_UNIT_VALUE_
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
@@ -125,6 +126,7 @@ public class DatasetGenerator {
    * @return Instance of {@link MongoDatabase} that's already connected to a particular MongoDB
    * database.
    */
+  @SuppressWarnings("resource")
   private static MongoDatabase getMongoDatabase(DatasetGeneratorArguments argumentValues) {
 
     MongoClient mongoClient = new MongoClient(argumentValues.getMongoClientURI());
@@ -154,6 +156,7 @@ public class DatasetGenerator {
     // Convert mongo unit collection data into JSON
     String jsonMongoUnitCollection = null;
     ObjectMapper jsonMapper = new ObjectMapper();
+    jsonMapper.registerModule(new JavaTimeModule());
     try {
       jsonMongoUnitCollection =
           jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(mongoUnitCollections);
@@ -257,7 +260,7 @@ public class DatasetGenerator {
           String fileName = outputFile.getName();
           if (!fileName.endsWith(".json") && !fileName.endsWith(".JSON")) {
 
-            // If doens't end with .json, check that what was provided is an existing directory then
+            // If doesn't end with .json, check that what was provided is an existing directory then
             if (!outputFile.isDirectory()) {
               System.out.println("**** ERROR: directory in the path must already exist. '-output'"
                   + " value that does not end with '.json' is assumed to be a directory.");
