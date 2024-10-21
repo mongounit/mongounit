@@ -40,6 +40,11 @@ public class DatasetGenerator {
   private static final String DB_URI_ARG_NAME = "dbUri";
 
   /**
+   * Argument name for the database name.
+   */
+  private static final String DB_NAME_ARG_NAME = "dbName";
+
+  /**
    * Argument name for the comma-separated list of collection names.
    */
   private static final String COLLECTION_NAMES_ARG_NAME = "collectionNames";
@@ -78,6 +83,11 @@ public class DatasetGenerator {
    */
   private static final List<String> DEFAULT_PRESERVE_BSON_TYPES =
       Arrays.asList("OBJECT_ID", "DATE_TIME");
+
+  /**
+   * Default database URI to be used when only -dbName is provided.
+   */
+  private static final String DEFAULT_DB_URI = "mongodb://localhost:27017/";
 
   /**
    * Main method for the {@link DatasetGenerator}.
@@ -232,6 +242,20 @@ public class DatasetGenerator {
 
           break;
 
+        case DB_NAME_ARG_NAME:
+          // Create MongoDB URI and test for validity of the URI in the process
+          try {
+            // Since DB name is provided, append it to the default URI
+            mongoClientURI = new MongoClientURI(DEFAULT_DB_URI + argValue);
+          } catch (Exception exception) {
+
+            // Show error to user and exit with error code
+            System.out.println("**** ERROR: " + exception.getMessage());
+            printRules();
+            System.exit(-1);
+          }
+          break;
+
         case COLLECTION_NAMES_ARG_NAME:
 
           // Extract collection names; don't add any that are empty strings
@@ -301,10 +325,10 @@ public class DatasetGenerator {
       outputPath = DEFAULT_OUTPUT_PATH;
     }
 
-    // If dbUri is not specified
+    // If neither the dbUri nor the dbName is not specified
     if (mongoClientURI == null) {
 
-      System.out.println("**** ERROR: -dbUri must be specified.");
+      System.out.println("**** ERROR: -dbUri or -dbName must be specified.");
       printRules();
       System.exit(-1);
     }
