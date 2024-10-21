@@ -15,7 +15,7 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 <dependency>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>3.0.0</version>
+  <version>3.1.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -28,7 +28,7 @@ See a complete example of [`pom.xml`](https://github.com/mongounit/mongounit-dem
 
 ### Older versions of Spring Boot
 
-For Spring Boot version 3.x and above use mongoUnit 3.0.0, for Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.
+For Spring Boot version 3.x and above use mongoUnit 3.1.0, for Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.
 
 ## Annotate the test class with @MongoUnitTest
 
@@ -48,9 +48,9 @@ The `@MongoUnitTest` annotation causes a few things to happen automatically.
 
 Be default, **mongoUnit** will create a database with URI of `mongodb://localhost:27017/mongounit-testdb_yourUserName_yyyy_MM_dd_HH_mm_ss_randomHash`. Also, now, before each test in this class, the database will be wiped by dropping all of its collections, ready to be seeded with the initial state data for the next test.
 
-The database name is date/time stamped and randomized on purpose so multiple runs can happen in parallel without stepping on each other. For example, if the team has a single development server which is used by the Continous Integration server. In such a case, it's common that several Pull Requests are getting verified and running at the same time.
+The database name is date/time stamped and randomized on purpose so multiple runs can happen in parallel without stepping on each other. For example, if the team has a single development server which is used by the Continuous Integration server. In such a case, it's common that several Pull Requests are getting verified and running at the same time.
 
-## Optinally annotate the test method with either @SeedWithDataset and/or @AssertMatchesDataset
+## Optionally annotate the test method with either @SeedWithDataset and/or @AssertMatchesDataset
 
 While these annotations are optional, unless you are setting up initial database state manually with the methods from `MongoUnit` class, usually, these annotations are used.
 
@@ -90,19 +90,29 @@ Note that both paths start with a `/`, which signifies the classpath root.
 
 The usual process is for you to populate the database (either with some tool or by running a single test), inspect the database to verify it's close to the state you want and then run the **mongoUnit** provided utility to generate the JSON file representing the entire database.
 
-You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/3.0.0/mongounit-3.0.0-jar-with-dependencies.jar) from maven central. 
+You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/3.1.0/mongounit-3.1.0-jar-with-dependencies.jar) from maven central. 
 
 For all of its available options see [Dataset Generator](https://mongounit.org/dataset-generator-utility.html) section.
 
 To use it with its minimal customizations:
 
 ```bash
-$ java -jar mongounit-3.0.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-3.1.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json
 **************************
 $ 
+```
+
+If you are running your db locally, you can skip having to specify the `dbUri` and just specify the `dbName`. The base URI will be assumed to be `mongodb://localhost:27017/`.
+
+```bash
+$ java -jar mongounit-3.1.0-jar-with-dependencies.jar -dbName=yourDbName
+
+**************************
+**** JSON was written to /.../output.json
+**************************
 ```
 
 This utility only *reads* from the database. It does not write anything to the database.

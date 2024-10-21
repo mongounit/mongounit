@@ -8,18 +8,18 @@ nav_order: 3
 * Java 17+
 * Spring Boot 3+
 * JUnit 5
-* Tested with MongoDB 4+ (but should work with lower versions with no issues)
+* Tested with MongoDB 7+ (but should work with lower versions with no issues)
 * Oder version support:
-  * Support for Java 8 and Spring Boot 1 and 2 is available. (For Spring Boot version 3.x and above use mongoUnit 3.0.0, for Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.)
+  * Support for Java 8 and Spring Boot 1 and 2 is available. (For Spring Boot version 3.x and above use mongoUnit 3.1.0, for Spring Boot version `2.3` and above, use mongoUnit version `2.0` and above. For earlier versions of Spring Boot, use mongoUnit version `1.1.0`.)
 
 # Spring Boot Version Compatibility
 
-If you are using Spring Boot version 3.3+, you must use the latest mongoUnit `3.0+`. In your `pom.xml`, you would have the following:
+If you are using Spring Boot version 3.3+, you must use the latest mongoUnit `3.1+`. In your `pom.xml`, you would have the following:
 ```
 <dependency>
    <groupId>org.mongounit</groupId>
    <artifactId>mongounit</artifactId>
-   <version>3.0.0</version>
+   <version>3.1.0</version>
    <scope>test</scope>
 </dependency>
 ```

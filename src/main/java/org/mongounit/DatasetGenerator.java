@@ -13,6 +13,7 @@ import static org.mongounit.config.MongoUnitProperties.DEFAULT_MONGO_UNIT_VALUE_
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
@@ -37,6 +38,11 @@ public class DatasetGenerator {
    * Argument name for the database URI.
    */
   private static final String DB_URI_ARG_NAME = "dbUri";
+
+  /**
+   * Argument name for the database name.
+   */
+  private static final String DB_NAME_ARG_NAME = "dbName";
 
   /**
    * Argument name for the comma-separated list of collection names.
@@ -77,6 +83,11 @@ public class DatasetGenerator {
    */
   private static final List<String> DEFAULT_PRESERVE_BSON_TYPES =
       Arrays.asList("OBJECT_ID", "DATE_TIME");
+
+  /**
+   * Default database URI to be used when only -dbName is provided.
+   */
+  private static final String DEFAULT_DB_URI = "mongodb://localhost:27017/";
 
   /**
    * Main method for the {@link DatasetGenerator}.
@@ -125,6 +136,7 @@ public class DatasetGenerator {
    * @return Instance of {@link MongoDatabase} that's already connected to a particular MongoDB
    * database.
    */
+  @SuppressWarnings("resource")
   private static MongoDatabase getMongoDatabase(DatasetGeneratorArguments argumentValues) {
 
     MongoClient mongoClient = new MongoClient(argumentValues.getMongoClientURI());
@@ -154,6 +166,7 @@ public class DatasetGenerator {
     // Convert mongo unit collection data into JSON
     String jsonMongoUnitCollection = null;
     ObjectMapper jsonMapper = new ObjectMapper();
+    jsonMapper.registerModule(new JavaTimeModule());
     try {
       jsonMongoUnitCollection =
           jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(mongoUnitCollections);
@@ -229,6 +242,20 @@ public class DatasetGenerator {
 
           break;
 
+        case DB_NAME_ARG_NAME:
+          // Create MongoDB URI and test for validity of the URI in the process
+          try {
+            // Since DB name is provided, append it to the default URI
+            mongoClientURI = new MongoClientURI(DEFAULT_DB_URI + argValue);
+          } catch (Exception exception) {
+
+            // Show error to user and exit with error code
+            System.out.println("**** ERROR: " + exception.getMessage());
+            printRules();
+            System.exit(-1);
+          }
+          break;
+
         case COLLECTION_NAMES_ARG_NAME:
 
           // Extract collection names; don't add any that are empty strings
@@ -257,7 +284,7 @@ public class DatasetGenerator {
           String fileName = outputFile.getName();
           if (!fileName.endsWith(".json") && !fileName.endsWith(".JSON")) {
 
-            // If doens't end with .json, check that what was provided is an existing directory then
+            // If doesn't end with .json, check that what was provided is an existing directory then
             if (!outputFile.isDirectory()) {
               System.out.println("**** ERROR: directory in the path must already exist. '-output'"
                   + " value that does not end with '.json' is assumed to be a directory.");
@@ -298,10 +325,10 @@ public class DatasetGenerator {
       outputPath = DEFAULT_OUTPUT_PATH;
     }
 
-    // If dbUri is not specified
+    // If neither the dbUri nor the dbName is not specified
     if (mongoClientURI == null) {
 
-      System.out.println("**** ERROR: -dbUri must be specified.");
+      System.out.println("**** ERROR: -dbUri or -dbName must be specified.");
       printRules();
       System.exit(-1);
     }
@@ -326,11 +353,17 @@ public class DatasetGenerator {
         + " -dbUri=mongodb://localhost:27017/test_db"
         + " -collectionNames=col1,col2"
         + " -output=./output.json");
+    System.out.println("* java -jar mongounit-x.x.x-jar-with-dependencies.jar .jar"
+        + " -dbName=test_db"
+        + " -collectionNames=col1,col2"
+        + " -output=./output.json");
     System.out.println("*");
     System.out.println("* Individual arguments must not have any spaces between '=' and"
         + " argument value or even in the argument value itself.");
-    System.out.println("* '-dbUri' (required) must be a valid MongoDB URI. Must start with"
-        + " 'mongodb'. Can contain username/password.");
+    System.out.println("* '-dbUri' (required unless -dbName is provided) must be a valid MongoDB "
+        + "URI (must include db name). Must start with 'mongodb'. Can contain username/password.");
+    System.out.println("* '-dbName' (required unless -dbUri is provided) must be a valid MongoDB "
+        + "DB name. Assumes base URI to be 'mongodb://localhost:27017/'.");
     System.out.println("* '-output' (optional) is an absolute or relative path to the file that"
         + " should be created with the dataset output in JSON format. An existing file with the"
         + " same name will be erased. If '-output' is specified, it MUST end with '.json'."
