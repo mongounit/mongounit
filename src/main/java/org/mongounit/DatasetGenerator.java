@@ -13,6 +13,7 @@ import static org.mongounit.config.MongoUnitProperties.DEFAULT_MONGO_UNIT_VALUE_
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -167,6 +168,10 @@ public class DatasetGenerator {
     String jsonMongoUnitCollection = null;
     ObjectMapper jsonMapper = new ObjectMapper();
     jsonMapper.registerModule(new JavaTimeModule());
+
+    // Ensure dates are written as ISO-8601 strings, not timestamps
+    jsonMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
     try {
       jsonMongoUnitCollection =
           jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(mongoUnitCollections);

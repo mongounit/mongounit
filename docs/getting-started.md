@@ -15,7 +15,7 @@ To allow **mongoUnit** to do its magic, install it with maven by including it in
 <dependency>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>3.1.0</version>
+  <version>3.1.1</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -90,14 +90,14 @@ Note that both paths start with a `/`, which signifies the classpath root.
 
 The usual process is for you to populate the database (either with some tool or by running a single test), inspect the database to verify it's close to the state you want and then run the **mongoUnit** provided utility to generate the JSON file representing the entire database.
 
-You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/3.1.0/mongounit-3.1.0-jar-with-dependencies.jar) from maven central. 
+You can download the [dataset generator utility](https://repo1.maven.org/maven2/org/mongounit/mongounit/3.1.1/mongounit-3.1.1-jar-with-dependencies.jar) from maven central. 
 
 For all of its available options see [Dataset Generator](https://mongounit.org/dataset-generator-utility.html) section.
 
 To use it with its minimal customizations:
 
 ```bash
-$ java -jar mongounit-3.1.0-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
+$ java -jar mongounit-3.1.1-jar-with-dependencies.jar -dbUri=mongodb://localhost:27017/yourDbName
 
 **************************
 **** JSON was written to /.../output.json
@@ -108,7 +108,7 @@ $
 If you are running your db locally, you can skip having to specify the `dbUri` and just specify the `dbName`. The base URI will be assumed to be `mongodb://localhost:27017/`.
 
 ```bash
-$ java -jar mongounit-3.1.0-jar-with-dependencies.jar -dbName=yourDbName
+$ java -jar mongounit-3.1.1-jar-with-dependencies.jar -dbName=yourDbName
 
 **************************
 **** JSON was written to /.../output.json
