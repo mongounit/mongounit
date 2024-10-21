@@ -223,7 +223,13 @@ One such clear example is the `_id` field. We can have high confidence that the 
 
 The `_id` field is the easiest example for this feature application, but there are certainly others. Which fields to skip assertion for is a decision that is closely tied to your particular use case.
 
-Sometimes, simply verifying that a field value exists (i.e., `!= null`) is good enough.
+Sometimes, simply verifying that a field value exists (i.e., `!= null`) is good enough. For example:
+```json
+"userId": {
+  "$$": null,
+  "comparator": "!="
+}
+```
 
 
 ## Supported Bson types
