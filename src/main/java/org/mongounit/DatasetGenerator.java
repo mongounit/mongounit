@@ -353,11 +353,17 @@ public class DatasetGenerator {
         + " -dbUri=mongodb://localhost:27017/test_db"
         + " -collectionNames=col1,col2"
         + " -output=./output.json");
+    System.out.println("* java -jar mongounit-x.x.x-jar-with-dependencies.jar .jar"
+        + " -dbName=test_db"
+        + " -collectionNames=col1,col2"
+        + " -output=./output.json");
     System.out.println("*");
     System.out.println("* Individual arguments must not have any spaces between '=' and"
         + " argument value or even in the argument value itself.");
-    System.out.println("* '-dbUri' (required) must be a valid MongoDB URI. Must start with"
-        + " 'mongodb'. Can contain username/password.");
+    System.out.println("* '-dbUri' (required unless -dbName is provided) must be a valid MongoDB "
+        + "URI (must include db name). Must start with 'mongodb'. Can contain username/password.");
+    System.out.println("* '-dbName' (required unless -dbUri is provided) must be a valid MongoDB "
+        + "DB name. Assumes base URI to be 'mongodb://localhost:27017/'.");
     System.out.println("* '-output' (optional) is an absolute or relative path to the file that"
         + " should be created with the dataset output in JSON format. An existing file with the"
         + " same name will be erased. If '-output' is specified, it MUST end with '.json'."
