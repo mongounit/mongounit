@@ -14,7 +14,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.mongounit</groupId>
   <artifactId>mongounit</artifactId>
-  <version>3.1.1</version>
+  <version>3.1.2</version>
   <name>mongounit</name>
   <description>MongoUnit is a data driven Integration testing framework for Spring Boot based
     applications that use MongoDB for persistence. The framework enables the developer to test the
@@ -46,7 +46,8 @@
     <java.version>17</java.version>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <spring.version>3.3.0</spring.version>
+    <spring.boot.version>3.3.4</spring.boot.version>
+    <spring.framework.version>6.1.14</spring.framework.version>
   </properties>
 
   <dependencies>
@@ -84,23 +85,35 @@
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        <version>${spring.version}</version>
+        <version>${spring.boot.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-devtools</artifactId>
-        <version>${spring.version}</version>
+        <version>${spring.boot.version}</version>
         <scope>runtime</scope>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-test</artifactId>
-        <version>${spring.version}</version>
+        <version>${spring.boot.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-json</artifactId>
-        <version>${spring.version}</version>
+        <version>${spring.boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-framework-bom</artifactId>
+        <version>${spring.framework.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.xmlunit</groupId>
+        <artifactId>xmlunit-core</artifactId>
+        <version>2.10.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
