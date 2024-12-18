@@ -17,6 +17,17 @@ nav_order: 1
 
 **mongoUnit** can also help you to verify that your database data match an expected set of values.
 
+## TL;DR How To
+1. You have some Spring Boot based MongoDB persistence logic (e.g., MyClass.java)
+2. You create an intergration test class (e.g., MyClassIT.java)
+3. You create a method to test some methods
+4. Create a fairly simple JSON file that populates the database either before each test method runs or before a particular method runs
+5. Create a fairly simple JSON file that represents what your database *should* contain once that method runs
+6. Annotate your test method with `@SeedWithDataset`. Before your test method runs, MongoUnit will automatically find the right JSON to prepopulate the DB from the file you created earlier
+7. Annotate your test method with `@AssertMatchesDataset`. After your test method run, MongoUnit will automatically find the right JSON to compare the "after" state of the DB to that JSON
+8. You can still run your own additional tests within your test method.
+9. There is a lot more, but you ARE reading the TL;DR 😉 (See [Features](https://mongounit.org/features.html) for more).
+
 ## See mongoUnit in action
 
 If you want to see a working (demo) project that uses **mongoUnit**, take a look at [mongounit-demo2](https://github.com/mongounit/mongounit-demo2).
