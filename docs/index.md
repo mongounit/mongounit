@@ -26,7 +26,7 @@ nav_order: 1
 4. (Optional) You create a fairly simple JSON file that populates the database either before each test method runs or before a particular method runs (MongoUnit has a helper utility to help you create it)
 5. (Optional) You create a fairly simple JSON file that represents what your database *should* contain once that method runs (MongoUnit has a helper utility to help you create it)
 6. (Optional) You annotate your test method with `@SeedWithDataset`. Before your test method runs, MongoUnit will automatically find the right JSON to prepopulate the DB from the file you created earlier
-7. (Optional) You annotate your test method with `@AssertMatchesDataset`. After your test method run, MongoUnit will automatically find the right JSON to compare the "after" state of the DB to that JSON
+7. (Optional) You annotate your test method with `@AssertMatchesDataset`. After your test method runs, MongoUnit will automatically find the right JSON to compare the "after" state of the DB to that JSON
 8. You can still run your own additional tests within your test method if you want/need.
 9. There is a lot more, but you ARE reading the TL;DR 😉 (See [Features](https://mongounit.org/features.html) for more).
 
