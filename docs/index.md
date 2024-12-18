@@ -7,9 +7,7 @@ nav_order: 1
 
 # What is mongoUnit?
 
-**MAIN BENEFIT IN ONE SENTENCE:**
-
-**You avoid having to write more DB persistent logic code in order to verify your other persistent logic code.**
+**MAIN BENEFIT IN ONE SENTENCE:** You avoid having to write more DB persistent logic code in order to verify your other persistent logic code.
 
 **mongoUnit** is a data driven Integration testing framework for Spring Boot based applications that use MongoDB for persistence. The framework enables the developer to test the data access logic with relative ease.
 
