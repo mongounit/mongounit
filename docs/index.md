@@ -23,8 +23,8 @@ nav_order: 1
 1. You have some Spring Boot based MongoDB persistence logic (e.g., MyClass.java)
 2. You create an intergration test class (e.g., MyClassIT.java)
 3. You create a test method
-4. (Optional) You create a fairly simple JSON file that populates the database either before each test method runs or before a particular method runs (MongoUnit has a helper utility for that)
-5. (Optional) You create a fairly simple JSON file that represents what your database *should* contain once that method runs (MongoUnit has a helper utility for that)
+4. (Optional) You create a fairly simple JSON file that populates the database either before each test method runs or before a particular method runs (MongoUnit has a helper utility to help you create it)
+5. (Optional) You create a fairly simple JSON file that represents what your database *should* contain once that method runs (MongoUnit has a helper utility to help you create it)
 6. (Optional) You annotate your test method with `@SeedWithDataset`. Before your test method runs, MongoUnit will automatically find the right JSON to prepopulate the DB from the file you created earlier
 7. (Optional) You annotate your test method with `@AssertMatchesDataset`. After your test method run, MongoUnit will automatically find the right JSON to compare the "after" state of the DB to that JSON
 8. You can still run your own additional tests within your test method if you want/need.
