@@ -164,7 +164,7 @@ For example:
 }
 ```
  
-The above is read: "Assert that `2019-10-28T17:05:36.132Z < actual value`".
+**The above is read: "Assert that `2019-10-28T17:05:36.132Z < actual value`".**
 
 The configurable `$$` in the type specification field name is a configuration trigger to let **mongoUnit** know that this is a special case that needs interpretation and not just a regular field in a document.
 
